@@ -2,38 +2,38 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Article;
+use App\Models\MerchandiseOrder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
-class ArticleController extends Controller
+class MerchandiseOrderController extends Controller
 {
     public function index() {
-        $articles = Article::all();
+        $orders = MerchandiseOrder::all();
 
         // Error handling
-        if ($articles->isEmpty()) {
+        if ($orders->isEmpty()) {
             return response()->json([
                 'status' => 'failed',
                 'message' => 'Data not found',
             ], 404);
-        } 
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Data found',
-            'data' => $articles
-        ], 200);
+        } else {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Data found',
+                'data' => $orders
+            ], 200);
+        }
     }
 
     public function store(Request $request) {
         $validator = Validator::make($request->all(), [
-            'title' => 'required|string',
-            'image' => 'required|image|mimes:jpg,jpeg,png|max:2048',
-            'content' => 'required|string',
-            'status' => ['required', Rule::in(['published', 'draft'])],
-            'users_id' => 'required|exists:users,id'
+            'quantity' => 'required|integer',
+            'total_price' => 'required|integer',
+            'status' => ['required', Rule::in(['pending', 'paid', 'shipped', 'completed'])],
+            'users_id' => 'required|exists:users,id',
+            'merchandise_id' => 'required|exists:merchandises,id'
         ]);
 
         if ($validator->fails()) {
@@ -43,13 +43,9 @@ class ArticleController extends Controller
             ], 422);
         }
 
-        $image = $request->file('image');
-        $image->store('articles', 'public');
-
-        $article = Article::create([
-            'title' => $request->title,
-            'image' => $image->hashName(),
-            'content' => $request->content,
+        $order = MerchandiseOrder::create([
+            'quantity' => $request->quantity,
+            'total_price' => $request->total_price,
             'status' => $request->status,
             'users_id' => $request->users_id
         ]);
@@ -57,7 +53,7 @@ class ArticleController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Data successfully created',
-            'data' => $article
+            'data' => $order
         ], 201);
     }
 }

@@ -2,18 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Complaint;
+use App\Models\MerchandiseCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 
-class ComplaintController extends Controller
+class MerchandiseCategoryController extends Controller
 {
     public function index() {
-        $complaints = Complaint::all();
+        $categories = MerchandiseCategory::all();
 
         // Error handling
-        if ($complaints->isEmpty()) {
+        if ($categories->isEmpty()) {
             return response()->json([
                 'status' => 'failed',
                 'message' => 'Data not found',
@@ -22,17 +21,14 @@ class ComplaintController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => 'Data found',
-                'data' => $complaints
+                'data' => $categories
             ], 200);
         }
     }
 
     public function store(Request $request) {
         $validator = Validator::make($request->all(), [
-            'subject' => 'required|string',
-            'description' => 'required|string',
-            'status' => ['required', Rule::in(['pending', 'processed', 'completed'])],
-            'users_id' => 'required|exists:users,id'
+            'name' => 'required|string|max:100'
         ]);
 
         if ($validator->fails()) {
@@ -42,17 +38,14 @@ class ComplaintController extends Controller
             ], 422);
         }
 
-        $complaint = Complaint::create([
-            'subject' => $request->subject,
-            'description' => $request->description,
-            'status' => $request->status,
-            'users_id' => $request->users_id
+        $category = MerchandiseCategory::create([
+            'name' => $request->name
         ]);
 
         return response()->json([
             'status' => 'success',
             'message' => 'Data successfully created',
-            'data' => $complaint
+            'data' => $category
         ], 201);
     }
 }

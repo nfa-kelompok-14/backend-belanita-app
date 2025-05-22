@@ -2,37 +2,34 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Article;
+use App\Models\EmergencyRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
-class ArticleController extends Controller
+class EmergencyRequestController extends Controller
 {
     public function index() {
-        $articles = Article::all();
+        $emergencies = EmergencyRequest::all();
 
         // Error handling
-        if ($articles->isEmpty()) {
+        if ($emergencies->isEmpty()) {
             return response()->json([
                 'status' => 'failed',
                 'message' => 'Data not found',
             ], 404);
-        } 
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Data found',
-            'data' => $articles
-        ], 200);
+        } else {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Data found',
+                'data' => $emergencies
+            ], 200);
+        }
     }
 
     public function store(Request $request) {
         $validator = Validator::make($request->all(), [
-            'title' => 'required|string',
-            'image' => 'required|image|mimes:jpg,jpeg,png|max:2048',
-            'content' => 'required|string',
-            'status' => ['required', Rule::in(['published', 'draft'])],
+            'contacted_via' => ['required', Rule::in(['message', 'call'])],
             'users_id' => 'required|exists:users,id'
         ]);
 
@@ -43,21 +40,15 @@ class ArticleController extends Controller
             ], 422);
         }
 
-        $image = $request->file('image');
-        $image->store('articles', 'public');
-
-        $article = Article::create([
-            'title' => $request->title,
-            'image' => $image->hashName(),
-            'content' => $request->content,
-            'status' => $request->status,
+        $emergency = EmergencyRequest::create([
+            'contacted_via' => $request->contacted_via,
             'users_id' => $request->users_id
         ]);
 
         return response()->json([
             'status' => 'success',
             'message' => 'Data successfully created',
-            'data' => $article
+            'data' => $emergency
         ], 201);
     }
 }
