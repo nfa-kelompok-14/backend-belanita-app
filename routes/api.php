@@ -2,7 +2,10 @@
 
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\ComplaintController;
+use App\Http\Controllers\EmergencyRequestController;
+use App\Http\Controllers\MerchandiseCategoryController;
 use App\Http\Controllers\MerchandiseController;
+use App\Http\Controllers\MerchandiseOrderController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -14,57 +17,52 @@ Route::get('/user', function (Request $request) {
 
 /**
  * Merchandise API
- * Used for getting all data with get().
- * Used for update data based id with put().
- * Used for create new data post().
- * User for delete data based id delete().
+ * Used for getting all data with index().
+ * Used for update data based id with update()
+ * Used for create new data with store().
+ * User for delete data based id with destroy().
+ * Used for show one data with show().
  */
 
-
-Route::prefix('merchandise')->group(function () {
-     Route::get('/index', [MerchandiseController::class, 'index']);
-
-     Route::put('/update/{id}', [MerchandiseController::class, 'update']);
-    
-     Route::post('/store', [MerchandiseController::class, 'store']);
-    
-     Route::delete('/destroy/{id}', [MerchandiseController::class, 'destroy']);
+ Route::prefix('merchandise')->group(function () {
+     Route::apiResource('/', MerchandiseController::class);
+     Route::apiResource('/category', MerchandiseCategoryController::class);
+     Route::apiResource('/order', MerchandiseOrderController::class);
  });
 
 
 /**
  * Article API
- * Used for getting all data with get().
- * Used for update data based id with put().
- * Used for create new data post().
- * User for delete data based id delete().
+ * Used for getting all data with index().
+ * Used for update data based id with update()
+ * Used for create new data with store().
+ * User for delete data based id with destroy().
+ * Used for show one data with show().
  */
 
-
-Route::prefix('article')->group(function () {
-     Route::get('/index', [ArticleController::class, 'index']);
-     Route::put('/update/{id}', [ArticleController::class, 'update']);
-    
-     Route::post('/store', [ArticleController::class, 'store']);
-    
-     Route::delete('/destroy/{id}', [ArticleController::class, 'destroy']);
- });
+ Route::apiResource('article', ArticleController::class);
 
 
 /**
  * Complaint API
- * Used for getting all data with get().
- * Used for update data based id with put().
- * Used for create new data post().
- * User for delete data based id delete().
+ * Used for getting all data with index().
+ * Used for update data based id with update()
+ * Used for create new data with store().
+ * User for delete data based id with destroy().
+ * Used for show one data with show().
  */
 
+ Route::apiResource('complaint', ComplaintController::class);
 
-Route::prefix('complaint')->group(function () {
-     Route::get('/index', [ComplaintController::class, 'index']);
-     Route::put('/update/{id}', [ComplaintController::class, 'update']);
-    
-     Route::post('/store', [ComplaintController::class, 'store']);
-    
-     Route::delete('/delete/{id}', [ComplaintController::class, 'delete']);
- });
+ 
+/**
+ * Emergency API
+ * Used for getting all data with index().
+ * Used for update data based id with update()
+ * Used for create new data with store().
+ * User for delete data based id with destroy().
+ * Used for show one data with show().
+ */
+
+ Route::apiResource('emergency', EmergencyRequestController::class);
+
