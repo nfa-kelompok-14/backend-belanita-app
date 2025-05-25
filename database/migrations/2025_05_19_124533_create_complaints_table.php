@@ -13,6 +13,10 @@ return new class extends Migration
     {
         Schema::create('complaints', function (Blueprint $table) {
             $table->id();
+            $table->string('subject');
+            $table->string('description');
+            $table->enum('status', ['pending', 'processed', 'completed']);
+            $table->string('users_id');
             $table->timestamps();
         });
     }
