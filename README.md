@@ -12,8 +12,8 @@ Melalui mekanisme pelaporan yang responsif dan informasi yang edukatif, Belanita
 
 - 📢 Endpoint pelaporan kekerasan/pelecehan
 - 📄 Informasi dan artikel edukatif
-- 🧑‍💼 Autentikasi dan otorisasi pengguna (admin & user)
-- 💬 Komentar, tanggapan, dan notifikasi (opsional)
+- 🧑‍💼 Autentikasi dan otorisasi pengguna dengan JWT-Auth (admin & user)
+- 🥼 mini e-commerce (Merchandise)
 - 📊 Statistik laporan (untuk admin dashboard)
 
 ---
