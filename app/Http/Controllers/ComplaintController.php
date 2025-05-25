@@ -55,4 +55,73 @@ class ComplaintController extends Controller
             'data' => $complaint
         ], 201);
     }
+
+    public function show($id) {
+        $complaint = Complaint::find($id);
+
+        if (!$complaint) {
+            return response()->json([
+                'status' => 'failed',
+                'message' => 'Data not found'
+        ], 404);
+    }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Data found',
+            'data' => $complaint
+        ], 200);
+    }
+
+    public function update(Request $request, $id) {
+        $complaint = Complaint::find($id);
+
+        if (!$complaint) {
+            return response()->json([
+                'status' => 'failed',
+                'message' => 'Data not found'
+        ], 404);
+    }
+
+        $validator = Validator::make($request->all(), [
+            'subject' => 'sometimes|required|string',
+            'description' => 'sometimes|required|string',
+            'status' => ['sometimes', Rule::in(['pending', 'processed', 'completed'])],
+            'users_id' => 'sometimes|exists:users,id'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'failed',
+                'message' => $validator->errors()
+        ], 422);
+    }
+
+        $complaint->update($request->all());
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Data successfully updated',
+            'data' => $complaint
+        ], 200);
+    }
+
+    public function destroy($id) {
+        $complaint = Complaint::find($id);
+
+        if (!$complaint) {
+            return response()->json([
+                'status' => 'failed',
+                'message' => 'Data not found'
+        ], 404);
+    }
+
+        $complaint->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Data successfully deleted'
+    ], 200);
+    }
+
 }

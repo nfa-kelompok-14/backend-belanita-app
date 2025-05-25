@@ -61,4 +61,85 @@ class MerchandiseController extends Controller
             'data' => $merchandise
         ], 201);
     }
+
+    public function show($id) {
+        $merchandise = Merchandise::find($id);
+
+        if (!$merchandise) {
+        return response()->json([
+            'status' => 'failed',
+            'message' => 'Data not found'
+        ], 404);
+    }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Data found',
+            'data' => $merchandise
+        ], 200);
+    }
+
+    public function update(Request $request, $id) {
+        $merchandise = Merchandise::find($id);
+
+        if (!$merchandise) {
+        return response()->json([
+            'status' => 'failed',
+            'message' => 'Data not found'
+        ], 404);
+    }
+
+        $validator = Validator::make($request->all(), [
+            'name' => 'sometimes|required|string|max:100',
+            'image' => 'sometimes|image|mimes:jpg,jpeg,png|max:2048',
+            'description' => 'sometimes|required|string',
+            'price' => 'sometimes|required|integer',
+            'stock' => 'sometimes|required|integer',
+            'merchandise_categories_id' => 'sometimes|required|exists:merchandise_categories,id'
+        ]);
+
+        if ($validator->fails()) {
+        return response()->json([
+            'status' => 'failed',
+            'message' => $validator->errors()
+        ], 422);
+    }
+
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $image->store('merchandises', 'public');
+            $merchandise->image = $image->hashName();
+    }
+
+        $merchandise->update($request->except('image'));
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Data successfully updated',
+            'data' => $merchandise
+        ], 200);
+    }
+
+    public function destroy($id) {
+        $merchandise = Merchandise::find($id);
+
+        if (!$merchandise) {
+        return response()->json([
+            'status' => 'failed',
+            'message' => 'Data not found'
+        ], 404);
+    }
+
+        if ($merchandise->image) {
+        \Storage::disk('public')->delete('merchandises/' . $merchandise->image);
+    }
+
+        $merchandise->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Data successfully deleted'
+        ], 200);
+    }
+
 }

@@ -60,4 +60,84 @@ class ArticleController extends Controller
             'data' => $article
         ], 201);
     }
+
+    public function show($id) {
+        $article = Article::find($id);
+
+        if (!$article) {
+            return response()->json([
+                'status' => 'failed',
+                'message' => 'Data not found'
+        ], 404);
+    }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Data found',
+            'data' => $article
+        ], 200);
+    }
+
+
+    public function update(Request $request, $id) {
+        $article = Article::find($id);
+
+        if (!$article) {
+            return response()->json([
+                'status' => 'failed',
+                'message' => 'Data not found'
+        ], 404);
+    }
+
+    $validator = Validator::make($request->all(), [
+        'title' => 'sometimes|required|string',
+        'image' => 'sometimes|image|mimes:jpg,jpeg,png|max:2048',
+        'content' => 'sometimes|required|string',
+        'status' => ['sometimes', Rule::in(['published', 'draft'])],
+        'users_id' => 'sometimes|exists:users,id'
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'status' => 'failed',
+            'message' => $validator->errors()
+        ], 422);
+    }
+
+    if ($request->hasFile('image')) {
+        \Storage::disk('public')->delete('articles/' . $article->image);
+        $image = $request->file('image');
+        $image->store('articles', 'public');
+        $article->image = $image->hashName();
+    }
+
+    $article->update($request->except('image'));
+
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Data updated successfully',
+        'data' => $article
+        ], 200);
+    }
+
+
+    public function destroy($id) {
+        $article = Article::find($id);
+
+        if (!$article) {
+            return response()->json([
+            'status' => 'failed',
+            'message' => 'Data not found'
+        ], 404);
+    }
+
+        \Storage::disk('public')->delete('articles/' . $article->image);
+        $article->delete();
+
+        return response()->json([
+        'status' => 'success',
+        'message' => 'Data deleted successfully'
+        ], 200);
+    }
+
 }

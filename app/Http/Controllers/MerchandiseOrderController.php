@@ -47,7 +47,8 @@ class MerchandiseOrderController extends Controller
             'quantity' => $request->quantity,
             'total_price' => $request->total_price,
             'status' => $request->status,
-            'users_id' => $request->users_id
+            'users_id' => $request->users_id,
+            'merchandise_id' => $request->merchandise_id
         ]);
 
         return response()->json([
@@ -56,4 +57,74 @@ class MerchandiseOrderController extends Controller
             'data' => $order
         ], 201);
     }
+
+    public function show($id) {
+        $order = MerchandiseOrder::find($id);
+    
+        if (!$order) {
+            return response()->json([
+                'status' => 'failed',
+                'message' => 'Data not found'
+            ], 404);
+        }
+    
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Data found',
+            'data' => $order
+        ], 200);
+    }
+    
+    public function update(Request $request, $id) {
+        $order = MerchandiseOrder::find($id);
+    
+        if (!$order) {
+            return response()->json([
+                'status' => 'failed',
+                'message' => 'Data not found'
+            ], 404);
+        }
+    
+        $validator = Validator::make($request->all(), [
+            'quantity' => 'sometimes|required|integer',
+            'total_price' => 'sometimes|required|integer',
+            'status' => ['sometimes', 'required', Rule::in(['pending', 'paid', 'shipped', 'completed'])],
+            'users_id' => 'sometimes|required|exists:users,id',
+            'merchandise_id' => 'sometimes|required|exists:merchandises,id'
+        ]);
+    
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'failed',
+                'message' => $validator->errors()
+            ], 422);
+        }
+    
+        $order->update($request->all());
+    
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Data successfully updated',
+            'data' => $order
+        ], 200);
+    }
+
+    public function destroy($id) {
+        $order = MerchandiseOrder::find($id);
+    
+        if (!$order) {
+            return response()->json([
+                'status' => 'failed',
+                'message' => 'Data not found'
+            ], 404);
+        }
+    
+        $order->delete();
+    
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Data successfully deleted'
+        ], 200);
+    }    
+    
 }
