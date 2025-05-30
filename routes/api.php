@@ -6,6 +6,7 @@ use App\Http\Controllers\EmergencyRequestController;
 use App\Http\Controllers\MerchandiseCategoryController;
 use App\Http\Controllers\MerchandiseController;
 use App\Http\Controllers\MerchandiseOrderController;
+use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -13,7 +14,8 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
 
 /**
  * Merchandise API
