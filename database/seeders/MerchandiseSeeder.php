@@ -15,7 +15,7 @@ class MerchandiseSeeder extends Seeder
     {
         Merchandise::create([
             'name' => 'T-shirt',
-            'image' => 'image.jpg',
+            'image' => 'merch/t-shirt.jpg',
             'description' => 'Kaos yang terbuat dari bahan katun berwarna ungu.',
             'price' => 35000,
             'stock' => 10,

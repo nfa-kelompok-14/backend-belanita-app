@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('emergency_requests', function (Blueprint $table) {
             $table->id();
             $table->enum('contacted_via', ['message', 'call']);
-            $table->integer('users_id');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }

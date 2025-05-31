@@ -15,45 +15,39 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
+    /**
+     * Route Guest
+     */
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware(['auth:api']);
 
-/**
- * Route user without auth
- */
-Route::apiResource('article', ArticleController::class)->only(['show', 'index']);
 
 Route::prefix('merchandise')->group(function () {
     Route::apiResource('/', MerchandiseController::class)->only(['show', 'index']);
     Route::apiResource('/category', MerchandiseCategoryController::class)->only(['show', 'index']);
+    Route::apiResource('/order', MerchandiseOrderController::class)->only(['store', 'show', 'index', 'update']);
 });
 
-Route::apiResource('emergency', EmergencyRequestController::class)->only(['show', 'index', 'store']);
+Route::apiResource('article', ArticleController::class)->only(['show', 'index']);
 
-
-/**
- * Route user with auth
- */
 Route::middleware(['auth:api'])->group(function () {
+
+    /**
+     * Route user
+     */
     
-     Route::apiResource('merchandise/order', MerchandiseOrderController::class)->only(['store', 'show', 'index', 'update']);
- 
+
      Route::apiResource('complaint', ComplaintController::class);
+     Route::apiResource('emergency', EmergencyRequestController::class)->only(['show', 'index', 'store']);
 
 
 /**
- * Route admin
+ * Route admin 
  */
- Route::middleware(['role:admin'])->group(function () {
-    Route::prefix('merchandise')->group(function () {
-        Route::apiResource('/', MerchandiseController::class);
-        Route::apiResource('/category', MerchandiseCategoryController::class);
-        Route::apiResource('/order', MerchandiseOrderController::class);
-    });
 
-    Route::apiResource('article', ArticleController::class);
- 
+ Route::middleware(['role:user'])->group(function () {
+
     Route::apiResource('complaint', ComplaintController::class);
 
     Route::apiResource('emergency', EmergencyRequestController::class);
