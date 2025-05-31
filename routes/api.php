@@ -20,7 +20,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware(['auth:api']);
 
 /**
- * Route user
+ * Route user without auth
  */
 Route::apiResource('article', ArticleController::class)->only(['show', 'index']);
 
@@ -31,6 +31,10 @@ Route::prefix('merchandise')->group(function () {
 
 Route::apiResource('emergency', EmergencyRequestController::class)->only(['show', 'index', 'store']);
 
+
+/**
+ * Route user with auth
+ */
 Route::middleware(['auth:api'])->group(function () {
     
      Route::apiResource('merchandise/order', MerchandiseOrderController::class)->only(['store', 'show', 'index', 'update']);
@@ -41,7 +45,7 @@ Route::middleware(['auth:api'])->group(function () {
 /**
  * Route admin
  */
- Route::middleware(['role:user'])->group(function () {
+ Route::middleware(['role:admin'])->group(function () {
     Route::prefix('merchandise')->group(function () {
         Route::apiResource('/', MerchandiseController::class);
         Route::apiResource('/category', MerchandiseCategoryController::class);
