@@ -39,5 +39,13 @@ class UserSeeder extends Seeder
             'phone_number' => '0888123457',
             'address' => 'Jalan Semanggi, No. 10, Kota Seoul'
         ]);
+        User::create([
+            'name' => 'gnarly',
+            'email' => 'gnarly@gmail.com',
+            'password' => bcrypt('gnarly'),
+            'role' => 'admin',
+            'phone_number' => '012223344',
+            'address' => 'Kota Palembang'
+        ]);
     }
 }

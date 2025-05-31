@@ -22,6 +22,7 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware(['auth:api']);
 
+
 Route::prefix('merchandise')->group(function () {
     Route::apiResource('/', MerchandiseController::class)->only(['show', 'index']);
     Route::apiResource('/category', MerchandiseCategoryController::class)->only(['show', 'index']);
@@ -29,6 +30,7 @@ Route::prefix('merchandise')->group(function () {
 });
 
 Route::apiResource('article', ArticleController::class)->only(['show', 'index']);
+
 Route::middleware(['auth:api'])->group(function () {
 
     /**
@@ -43,6 +45,7 @@ Route::middleware(['auth:api'])->group(function () {
 /**
  * Route admin 
  */
+
  Route::middleware(['role:user'])->group(function () {
 
     Route::apiResource('complaint', ComplaintController::class);
