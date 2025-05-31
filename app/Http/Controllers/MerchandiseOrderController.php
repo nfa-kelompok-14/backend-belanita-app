@@ -15,7 +15,7 @@ class MerchandiseOrderController extends Controller
         // Error handling
         if ($orders->isEmpty()) {
             return response()->json([
-                'status' => 'failed',
+                'status' => 'error',
                 'message' => 'Data not found',
             ], 404);
         } else {
@@ -38,7 +38,7 @@ class MerchandiseOrderController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                'status' => 'failed',
+                'status' => 'error',
                 'message' => $validator->errors()
             ], 422);
         }
@@ -63,7 +63,7 @@ class MerchandiseOrderController extends Controller
     
         if (!$order) {
             return response()->json([
-                'status' => 'failed',
+                'status' => 'error',
                 'message' => 'Data not found'
             ], 404);
         }
@@ -80,7 +80,7 @@ class MerchandiseOrderController extends Controller
     
         if (!$order) {
             return response()->json([
-                'status' => 'failed',
+                'status' => 'error',
                 'message' => 'Data not found'
             ], 404);
         }
@@ -95,7 +95,7 @@ class MerchandiseOrderController extends Controller
     
         if ($validator->fails()) {
             return response()->json([
-                'status' => 'failed',
+                'status' => 'error',
                 'message' => $validator->errors()
             ], 422);
         }
@@ -114,7 +114,7 @@ class MerchandiseOrderController extends Controller
     
         if (!$order) {
             return response()->json([
-                'status' => 'failed',
+                'status' => 'error',
                 'message' => 'Data not found'
             ], 404);
         }

@@ -15,7 +15,7 @@ class ArticleController extends Controller
         // Error handling
         if ($articles->isEmpty()) {
             return response()->json([
-                'status' => 'failed',
+                'status' => 'error',
                 'message' => 'Data not found',
             ], 404);
         } 
@@ -38,7 +38,7 @@ class ArticleController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                'status' => 'failed',
+                'status' => 'error',
                 'message' => $validator->errors()
             ], 422);
         }
@@ -66,7 +66,7 @@ class ArticleController extends Controller
 
         if (!$article) {
             return response()->json([
-                'status' => 'failed',
+                'status' => 'error',
                 'message' => 'Data not found'
         ], 404);
     }
@@ -84,7 +84,7 @@ class ArticleController extends Controller
 
         if (!$article) {
             return response()->json([
-                'status' => 'failed',
+                'status' => 'error',
                 'message' => 'Data not found'
         ], 404);
     }
@@ -99,7 +99,7 @@ class ArticleController extends Controller
 
     if ($validator->fails()) {
         return response()->json([
-            'status' => 'failed',
+            'status' => 'error',
             'message' => $validator->errors()
         ], 422);
     }
@@ -126,7 +126,7 @@ class ArticleController extends Controller
 
         if (!$article) {
             return response()->json([
-            'status' => 'failed',
+            'status' => 'error',
             'message' => 'Data not found'
         ], 404);
     }
