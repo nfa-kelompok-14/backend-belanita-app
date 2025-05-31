@@ -19,26 +19,23 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware(['auth:api']);
 
+/**
+ * Route user
+ */
+Route::apiResource('article', ArticleController::class)->only(['show', 'index']);
+
+Route::prefix('merchandise')->group(function () {
+    Route::apiResource('/', MerchandiseController::class)->only(['show', 'index']);
+    Route::apiResource('/category', MerchandiseCategoryController::class)->only(['show', 'index']);
+});
+
+Route::apiResource('emergency', EmergencyRequestController::class)->only(['show', 'index', 'store']);
+
 Route::middleware(['auth:api'])->group(function () {
-
-    /**
-     * Route user
-     */
     
-    Route::prefix('merchandise')->group(function () {
-        Route::apiResource('/', MerchandiseController::class)->only(['show', 'index']);
-        Route::apiResource('/category', MerchandiseCategoryController::class)->only(['show', 'index']);
-        Route::apiResource('/order', MerchandiseOrderController::class)->only(['store', 'show', 'index', 'update']);
-    });
-
-
-     Route::apiResource('article', ArticleController::class)->only(['show', 'index']);
- 
+     Route::apiResource('merchandise/order', MerchandiseOrderController::class)->only(['store', 'show', 'index', 'update']);
  
      Route::apiResource('complaint', ComplaintController::class);
-
- 
-     Route::apiResource('emergency', EmergencyRequestController::class)->only(['show', 'index', 'store']);
 
 
 /**
@@ -51,14 +48,12 @@ Route::middleware(['auth:api'])->group(function () {
         Route::apiResource('/order', MerchandiseOrderController::class);
     });
 
-
     Route::apiResource('article', ArticleController::class);
- 
  
     Route::apiResource('complaint', ComplaintController::class);
 
- 
     Route::apiResource('emergency', EmergencyRequestController::class);
+
     Route::apiResource('users', UserController::class);
  });
 
