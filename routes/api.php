@@ -18,7 +18,7 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
 /**
- * Merchandise API
+ * Merchandise Route
  * Used for getting all data with index().
  * Used for update data based id with update()
  * Used for create new data with store().
@@ -34,7 +34,7 @@ Route::post('/login', [AuthController::class, 'login']);
 
 
 /**
- * Article API
+ * Article Route
  * Used for getting all data with index().
  * Used for update data based id with update()
  * Used for create new data with store().
@@ -46,7 +46,7 @@ Route::post('/login', [AuthController::class, 'login']);
 
 
 /**
- * Complaint API
+ * Complaint Route
  * Used for getting all data with index().
  * Used for update data based id with update()
  * Used for create new data with store().
@@ -58,7 +58,7 @@ Route::post('/login', [AuthController::class, 'login']);
 
  
 /**
- * Emergency API
+ * Emergency Route
  * Used for getting all data with index().
  * Used for update data based id with update()
  * Used for create new data with store().
