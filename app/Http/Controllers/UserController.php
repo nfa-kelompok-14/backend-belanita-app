@@ -123,22 +123,33 @@ class UserController extends Controller {
         ], 200);
     }
 
-    public function destroy($id) {
-        
+    /**
+     * Delete User Function
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function destroyUser($id)
+    {
         $user = User::find($id);
 
         if (!$user) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'User not found'
+                'message' => 'User tidak ditemukan.'
             ], 404);
+        }
+
+        if ($user->image !== 'profile/user_pict_default.png') {
+            $imagePath = public_path($user->image);
+            if (file_exists($imagePath)) unlink($imagePath);
         }
 
         $user->delete();
 
         return response()->json([
             'status' => 'success',
-            'message' => 'User deleted successfully'
-        ], 200);
+            'message' => 'User berhasil dihapus.'
+        ]);
     }
+
 }
