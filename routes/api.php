@@ -15,46 +15,36 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
+    /**
+     * Route Guest
+     */
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware(['auth:api']);
 
+Route::prefix('merchandise')->group(function () {
+    Route::apiResource('/', MerchandiseController::class)->only(['show', 'index']);
+    Route::apiResource('/category', MerchandiseCategoryController::class)->only(['show', 'index']);
+    Route::apiResource('/order', MerchandiseOrderController::class)->only(['store', 'show', 'index', 'update']);
+});
+
+Route::apiResource('article', ArticleController::class)->only(['show', 'index']);
 Route::middleware(['auth:api'])->group(function () {
 
     /**
      * Route user
      */
     
-    Route::prefix('merchandise')->group(function () {
-        Route::apiResource('/', MerchandiseController::class)->only(['show', 'index']);
-        Route::apiResource('/category', MerchandiseCategoryController::class)->only(['show', 'index']);
-        Route::apiResource('/order', MerchandiseOrderController::class)->only(['store', 'show', 'index', 'update']);
-    });
 
-
-     Route::apiResource('article', ArticleController::class)->only(['show', 'index']);
- 
- 
      Route::apiResource('complaint', ComplaintController::class);
-
- 
      Route::apiResource('emergency', EmergencyRequestController::class)->only(['show', 'index', 'store']);
 
 
 /**
- * Route admin
+ * Route admin 
  */
  Route::middleware(['role:user'])->group(function () {
-    Route::prefix('merchandise')->group(function () {
-        Route::apiResource('/', MerchandiseController::class);
-        Route::apiResource('/category', MerchandiseCategoryController::class);
-        Route::apiResource('/order', MerchandiseOrderController::class);
-    });
 
-
-    Route::apiResource('article', ArticleController::class);
- 
- 
     Route::apiResource('complaint', ComplaintController::class);
 
  

@@ -16,8 +16,9 @@ class ComplaintSeeder extends Seeder
         Complaint::create([
             'subject' => 'KDRT',
             'description' => 'KDRT yang dilakukan oleh kucing peliharaan dengan luka cakar sepanjang 10cm.',
+            'image' => 'pengaduan/pengaduan-1.jpg',
             'status' => 'processed',
-            'users_id' => 1
+            'user_id' => 1
         ]);
     }
 }
