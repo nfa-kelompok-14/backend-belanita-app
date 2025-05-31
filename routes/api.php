@@ -47,8 +47,8 @@ Route::middleware(['auth:api'])->group(function () {
 
     Route::apiResource('complaint', ComplaintController::class);
 
- 
     Route::apiResource('emergency', EmergencyRequestController::class);
+
     Route::apiResource('users', UserController::class);
  });
 
