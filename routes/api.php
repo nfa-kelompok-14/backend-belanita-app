@@ -16,7 +16,7 @@ Route::get('/user', function (Request $request) {
 
 
 /**
- * Merchandise API
+ * Merchandise Route
  * Used for getting all data with index().
  * Used for update data based id with update()
  * Used for create new data with store().
@@ -32,7 +32,7 @@ Route::get('/user', function (Request $request) {
 
 
 /**
- * Article API
+ * Article Route
  * Used for getting all data with index().
  * Used for update data based id with update()
  * Used for create new data with store().
@@ -44,7 +44,7 @@ Route::get('/user', function (Request $request) {
 
 
 /**
- * Complaint API
+ * Complaint Route
  * Used for getting all data with index().
  * Used for update data based id with update()
  * Used for create new data with store().
@@ -56,7 +56,7 @@ Route::get('/user', function (Request $request) {
 
  
 /**
- * Emergency API
+ * Emergency Route
  * Used for getting all data with index().
  * Used for update data based id with update()
  * Used for create new data with store().
