@@ -7,6 +7,7 @@ use App\Http\Controllers\MerchandiseCategoryController;
 use App\Http\Controllers\MerchandiseController;
 use App\Http\Controllers\MerchandiseOrderController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -16,55 +17,49 @@ Route::get('/user', function (Request $request) {
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/logout', [AuthController::class, 'logout'])->middleware(['auth:api']);
 
-/**
- * Merchandise Route
- * Used for getting all data with index().
- * Used for update data based id with update()
- * Used for create new data with store().
- * User for delete data based id with destroy().
- * Used for show one data with show().
- */
+Route::middleware(['auth:api'])->group(function () {
 
- Route::prefix('merchandise')->group(function () {
-     Route::apiResource('/', MerchandiseController::class);
-     Route::apiResource('/category', MerchandiseCategoryController::class);
-     Route::apiResource('/order', MerchandiseOrderController::class);
- });
+    /**
+     * Route user
+     */
+    
+    Route::prefix('merchandise')->group(function () {
+        Route::apiResource('/', MerchandiseController::class)->only(['show', 'index']);
+        Route::apiResource('/category', MerchandiseCategoryController::class)->only(['show', 'index']);
+        Route::apiResource('/order', MerchandiseOrderController::class)->only(['store', 'show', 'index', 'update']);
+    });
 
 
-/**
- * Article Route
- * Used for getting all data with index().
- * Used for update data based id with update()
- * Used for create new data with store().
- * User for delete data based id with destroy().
- * Used for show one data with show().
- */
-
- Route::apiResource('article', ArticleController::class);
-
-
-/**
- * Complaint Route
- * Used for getting all data with index().
- * Used for update data based id with update()
- * Used for create new data with store().
- * User for delete data based id with destroy().
- * Used for show one data with show().
- */
-
- Route::apiResource('complaint', ComplaintController::class);
+     Route::apiResource('article', ArticleController::class)->only(['show', 'index']);
+ 
+ 
+     Route::apiResource('complaint', ComplaintController::class);
 
  
+     Route::apiResource('emergency', EmergencyRequestController::class)->only(['show', 'index', 'store']);
+
+
 /**
- * Emergency Route
- * Used for getting all data with index().
- * Used for update data based id with update()
- * Used for create new data with store().
- * User for delete data based id with destroy().
- * Used for show one data with show().
+ * Route admin
  */
+ Route::middleware(['role:user'])->group(function () {
+    Route::prefix('merchandise')->group(function () {
+        Route::apiResource('/', MerchandiseController::class);
+        Route::apiResource('/category', MerchandiseCategoryController::class);
+        Route::apiResource('/order', MerchandiseOrderController::class);
+    });
 
- Route::apiResource('emergency', EmergencyRequestController::class);
 
+    Route::apiResource('article', ArticleController::class);
+ 
+ 
+    Route::apiResource('complaint', ComplaintController::class);
+
+ 
+    Route::apiResource('emergency', EmergencyRequestController::class);
+    Route::apiResource('users', UserController::class);
+ });
+
+});

@@ -15,7 +15,7 @@ class EmergencyRequestController extends Controller
         // Error handling
         if ($emergencies->isEmpty()) {
             return response()->json([
-                'status' => 'failed',
+                'status' => 'error',
                 'message' => 'Data not found',
             ], 404);
         } else {
@@ -35,7 +35,7 @@ class EmergencyRequestController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                'status' => 'failed',
+                'status' => 'error',
                 'message' => $validator->errors()
             ], 422);
         }
@@ -57,7 +57,7 @@ class EmergencyRequestController extends Controller
 
         if (!$emergency) {
             return response()->json([
-                'status' => 'failed',
+                'status' => 'error',
                 'message' => 'Data not found'
         ], 404);
     }
@@ -74,7 +74,7 @@ class EmergencyRequestController extends Controller
 
         if (!$emergency) {
             return response()->json([
-                'status' => 'failed',
+                'status' => 'error',
                 'message' => 'Data not found'
         ], 404);
     }
@@ -86,7 +86,7 @@ class EmergencyRequestController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                'status' => 'failed',
+                'status' => 'error',
                 'message' => $validator->errors()
         ], 422);
     }
@@ -105,7 +105,7 @@ class EmergencyRequestController extends Controller
 
         if (!$emergency) {
                 return response()->json([
-                'status' => 'failed',
+                'status' => 'error',
                 'message' => 'Data not found'
         ], 404);
     }
