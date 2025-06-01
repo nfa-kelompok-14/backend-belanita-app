@@ -4,9 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 
 class UserController extends Controller {
 
@@ -28,40 +27,6 @@ class UserController extends Controller {
         ], 200);
     }
 
-    public function store(Request $request) {
-
-        $validator = Validator::make($request->all(), [
-            'name'         => 'required|string|max:100',
-            'email'        => 'required|email|unique:users,email',
-            'password'     => 'required|string|min:6',
-            'role'         => ['required', Rule::in(['user','admin'])],
-            'phone_number' => 'required|string|max:20',
-            'address'      => 'required|string|max:255',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $validator->errors()
-            ], 422);
-        }
-
-        $user = User::create([
-            'name'         => $request->name,
-            'email'        => $request->email,
-            'password'     => Hash::make($request->password),
-            'role'         => $request->role,
-            'phone_number' => $request->phone_number,
-            'address'      => $request->address,
-        ]);
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'User created successfully',
-            'data' => $user
-        ], 201);
-    }
-
     public function show($id) {
 
         $user = User::find($id);
@@ -80,47 +45,50 @@ class UserController extends Controller {
         ], 200);
     }
 
-    public function update(Request $request, $id) {
-
-        $user = User::find($id);
-
-        if (!$user) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'User not found'
-            ], 404);
-        }
+    /**
+     * Update Profile Function
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = auth('api')->user();
 
         $validator = Validator::make($request->all(), [
-            'name'         => 'sometimes|required|string|max:100',
-            'email'        => ['sometimes', 'required', 'email', Rule::unique('users')->ignore($user->id)],
-            'password'     => 'sometimes|nullable|string|min:6',
-            'role'         => ['sometimes', 'required', Rule::in(['user', 'admin'])],
-            'phone_number' => 'sometimes|required|string|max:20',
-            'address'      => 'sometimes|required|string|max:255',
+            'name' => 'sometimes|string|max:255',
+            'phone_number' => 'sometimes|string|max:20',
+            'address' => 'sometimes|string|max:255',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $validator->errors()
-            ], 422);
+            return response()->json($validator->errors(), 422);
         }
 
-        $user->update([
-            'name'         => $request->name ?? $user->name,
-            'email'        => $request->email ?? $user->email,
-            'password'     => $request->password ? Hash::make($request->password) : $user->password,
-            'role'         => $request->role ?? $user->role,
-            'phone_number' => $request->phone_number ?? $user->phone_number,
-            'address'      => $request->address ?? $user->address,
-        ]);
+        $user->name = $request->input('name', $user->name);
+        $user->phone_number = $request->input('phone_number', $user->phone_number);
+        $user->address = $request->input('address', $user->address);
+
+        if ($request->hasFile('image')) {
+            if ($user->image && $user->image !== 'storage/profile/user_pict_default.png') {
+                $oldPath = str_replace('storage/', '', $user->image);
+                if (Storage::disk('public')->exists($oldPath)) {
+                    Storage::disk('public')->delete($oldPath);
+                }
+            }
+
+            $filename = time() . '_' . $request->file('image')->getClientOriginalName();
+            $path = $request->file('image')->storeAs('profile', $filename, 'public');
+            $user->image = 'storage/' . $path;
+        }
+
+        $user->save();
 
         return response()->json([
             'status' => 'success',
-            'message' => 'User updated successfully',
+            'message' => 'Profile updated successfully',
             'data' => $user
-        ], 200);
+        ]);
     }
 
     /**
@@ -128,7 +96,7 @@ class UserController extends Controller {
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function destroyUser($id)
+    public function destroy($id)
     {
         $user = User::find($id);
 

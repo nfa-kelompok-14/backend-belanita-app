@@ -14,6 +14,13 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 /**
+ * Route guest/umum
+ */
+Route::apiResource('article', ArticleController::class)->only(['index', 'show']);
+Route::apiResource('merchandise', MerchandiseController::class)->only(['index', 'show']);
+
+
+/**
  * Route Khusus Auth
  */
 Route::prefix('auth')->group(function () {
@@ -22,32 +29,36 @@ Route::prefix('auth')->group(function () {
 
     Route::middleware('auth:api')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
-        Route::get('/me', [AuthController::class, 'me']);
     });
 });
 
 /**
- * Route guest/umum
+ * Route User Profile (self)
  */
-Route::apiResource('article', ArticleController::class)->only(['show', 'index']);
-Route::apiResource('merchandise', MerchandiseController::class)->only(['show', 'index']);
+Route::middleware('auth:api')->group(function () {
+    Route::get('/me', [UserController::class, 'me']);
+    Route::put('/user/profile', [UserController::class, 'updateProfile']);
+    Route::delete('/user/profile', [UserController::class, 'destroyOwnAccount']);
+});
+
 
 /**
  * Route user login only
  */
 Route::middleware('auth:api')->group(function () {
-    Route::post('/auth/profile', [AuthController::class, 'updateProfile']);
-    Route::delete('/auth/profile', [AuthController::class, 'destroyOwnAccount']);
-    Route::apiResource('complaint', ComplaintController::class);
-    Route::apiResource('emergency', EmergencyRequestController::class)->only(['show', 'index', 'store']);
+    Route::apiResource('complaint', ComplaintController::class)->only(['index', 'show', 'store']);
+    Route::apiResource('emergency', EmergencyRequestController::class)->only(['store']);
 });
 
 /**
  * Route admin only
  */
-Route::middleware(['role:admin'])->group(function () {
-    Route::apiResource('complaint', ComplaintController::class);
-    Route::apiResource('emergency', EmergencyRequestController::class);
-    Route::apiResource('users', UserController::class);
-    Route::delete('user/{id}', [UserController::class, 'destroyUser']);
+Route::middleware(['auth:api', 'role:admin'])->group(function () {
+    Route::post('/article', [ArticleController::class, 'store']);
+    Route::put('/article/{id}', [ArticleController::class, 'update']);
+    Route::delete('/article/{id}', [ArticleController::class, 'destroy']);
+
+    Route::apiResource('complaint', ComplaintController::class)->except(['index', 'show', 'store']);
+    Route::apiResource('emergency', EmergencyRequestController::class)->except(['index', 'show', 'store']);
+    Route::apiResource('users', UserController::class)->only(['index', 'show', 'destroy']);
 });

@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
@@ -18,7 +19,7 @@ class AuthController extends Controller
      */
     public function register(Request $request)
     {
-        $validator =Validator::make($request->all(), [
+        $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users',
             'password' => 'required|min:8',
@@ -36,7 +37,7 @@ class AuthController extends Controller
             'password' => bcrypt($request->password),
             'phone_number' => $request->phone_number,
             'address' => $request->address,
-            'image' => 'default.png',
+            'image' => 'storage/profile/user_pict_default.png',
             'role' => 'user',
         ]);
 
@@ -109,52 +110,6 @@ class AuthController extends Controller
     }
 
     /**
-     * Update Profile Function
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function updateProfile(Request $request)
-    {
-        $user = auth('api')->user();
-
-        $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|string|max:255',
-            'phone_number' => 'sometimes|string|max:20',
-            'address' => 'sometimes|string|max:255',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
-        }
-
-        $user->name = $request->input('name', $user->name);
-        $user->phone_number = $request->input('phone_number', $user->phone_number);
-        $user->address = $request->input('address', $user->address);
-
-        if ($request->hasFile('image')) {
-            if ($user->image !== 'profile/user_pict_default.png') {
-                $oldImagePath = public_path($user->image);
-                if (file_exists($oldImagePath)) {
-                    unlink($oldImagePath);
-                }
-            }
-
-            $filename = time() . '_' . $request->file('image')->getClientOriginalName();
-            $request->file('image')->move(public_path('profile'), $filename);
-            $user->image = 'profile/' . $filename;
-        }
-
-        $user->save();
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Profile updated successfully',
-            'data' => $user
-        ]);
-    }
-
-    /**
      * Delete Own Profile Function
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
@@ -174,9 +129,11 @@ class AuthController extends Controller
             ], 401);
         }
 
-        if ($user->image !== 'profile/user_pict_default.png') {
-            $imagePath = public_path($user->image);
-            if (file_exists($imagePath)) unlink($imagePath);
+        if ($user->image && $user->image !== 'storage/profile/user_pict_default.png') {
+            $path = str_replace('storage/', '', $user->image);
+            if (Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->delete($path);
+            }
         }
 
         JWTAuth::invalidate(JWTAuth::getToken());
@@ -203,4 +160,6 @@ class AuthController extends Controller
             'user' => auth('api')->user()
         ]);
     }
+
+
 }
