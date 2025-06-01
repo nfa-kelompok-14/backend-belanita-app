@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('articles', function (Blueprint $table) {
             $table->id();
             $table->string('title');
-            $table->string('image');
+            $table->string('image')->default('article/default.png');
             $table->text('content');
             $table->enum('status', ['published', 'draft'])->default('draft');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
