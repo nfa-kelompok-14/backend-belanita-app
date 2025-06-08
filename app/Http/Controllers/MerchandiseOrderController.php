@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\MerchandiseOrder;
+use App\Models\Merchandise;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -10,12 +12,12 @@ use Illuminate\Validation\Rule;
 class MerchandiseOrderController extends Controller
 {
     public function index() {
-        $orders = MerchandiseOrder::all();
+        $orders = MerchandiseOrder::with('user' , 'merchandise')->get();
 
         // Error handling
         if ($orders->isEmpty()) {
             return response()->json([
-                'status' => 'failed',
+                'status' => 'error',
                 'message' => 'Data not found',
             ], 404);
         } else {
@@ -28,42 +30,64 @@ class MerchandiseOrderController extends Controller
     }
 
     public function store(Request $request) {
-        $validator = Validator::make($request->all(), [
-            'quantity' => 'required|integer',
-            'total_price' => 'required|integer',
-            'status' => ['required', Rule::in(['pending', 'paid', 'shipped', 'completed'])],
-            'users_id' => 'required|exists:users,id',
-            'merchandise_id' => 'required|exists:merchandises,id'
-        ]);
+    $validator = Validator::make($request->all(), [
+        'merchandise_id' => 'required|exists:merchandise,id',
+        'quantity' => 'required|integer|min:1',
+    ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => 'failed',
-                'message' => $validator->errors()
-            ], 422);
-        }
-
-        $order = MerchandiseOrder::create([
-            'quantity' => $request->quantity,
-            'total_price' => $request->total_price,
-            'status' => $request->status,
-            'users_id' => $request->users_id,
-            'merchandise_id' => $request->merchandise_id
-        ]);
-
+    if ($validator->fails()) {
         return response()->json([
-            'status' => 'success',
-            'message' => 'Data successfully created',
-            'data' => $order
-        ], 201);
+            'status' => 'error',
+            'errors' => $validator->errors(),
+        ], 422);
     }
 
+    $user = auth()->user();
+        if (!$user) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Unauthorized',
+        ], 401);
+        }
+    $merchandise = Merchandise::findOrFail($request->merchandise_id);
+
+    if ($merchandise->stock < $request->quantity) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Stock tidak mencukupi.',
+        ], 400);
+    }
+
+    // Hitung total harga
+    $totalPrice = $merchandise->price * $request->quantity;
+
+    // Buat pesanan
+    $order = MerchandiseOrder::create([
+        'user_id' => $user->id,
+        'merchandise_id' => $merchandise->id,
+        'quantity' => $request->quantity,
+        'total_price' => $totalPrice,
+        'status' => 'pending',
+    ]);
+
+    // Kurangi stok
+    $merchandise->stock -= $request->quantity;
+    $merchandise->save();
+
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Pesanan berhasil dibuat.',
+        'data' => $order
+    ], 201);
+}
+
+
     public function show($id) {
-        $order = MerchandiseOrder::find($id);
+        $order = MerchandiseOrder::with('user' , 'merchandise')->find($id);
     
         if (!$order) {
             return response()->json([
-                'status' => 'failed',
+                'status' => 'error',
                 'message' => 'Data not found'
             ], 404);
         }
@@ -76,11 +100,11 @@ class MerchandiseOrderController extends Controller
     }
     
     public function update(Request $request, $id) {
-        $order = MerchandiseOrder::find($id);
+        $order = MerchandiseOrder::with('user' , 'merchandise')->find($id);
     
         if (!$order) {
             return response()->json([
-                'status' => 'failed',
+                'status' => 'error',
                 'message' => 'Data not found'
             ], 404);
         }
@@ -95,7 +119,7 @@ class MerchandiseOrderController extends Controller
     
         if ($validator->fails()) {
             return response()->json([
-                'status' => 'failed',
+                'status' => 'error',
                 'message' => $validator->errors()
             ], 422);
         }
@@ -110,11 +134,11 @@ class MerchandiseOrderController extends Controller
     }
 
     public function destroy($id) {
-        $order = MerchandiseOrder::find($id);
+        $order = MerchandiseOrder::with('user' , 'merchandise')->find($id);
     
         if (!$order) {
             return response()->json([
-                'status' => 'failed',
+                'status' => 'error',
                 'message' => 'Data not found'
             ], 404);
         }

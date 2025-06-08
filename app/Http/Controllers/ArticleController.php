@@ -4,21 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Models\Article;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 
 class ArticleController extends Controller
 {
     public function index() {
         $articles = Article::all();
 
-        // Error handling
         if ($articles->isEmpty()) {
             return response()->json([
-                'status' => 'failed',
+                'status' => 'error',
                 'message' => 'Data not found',
             ], 404);
-        } 
+        }
 
         return response()->json([
             'status' => 'success',
@@ -27,36 +26,43 @@ class ArticleController extends Controller
         ], 200);
     }
 
-    public function store(Request $request) {
+    public function store(Request $request)
+    {
         $validator = Validator::make($request->all(), [
-            'title' => 'required|string',
-            'image' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+            'title' => 'required|string|max:255',
             'content' => 'required|string',
-            'status' => ['required', Rule::in(['published', 'draft'])],
-            'users_id' => 'required|exists:users,id'
+            'status' => 'required|in:draft,published',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
-                'status' => 'failed',
-                'message' => $validator->errors()
+                'status' => 'error',
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
             ], 422);
         }
 
-        $image = $request->file('image');
-        $image->store('articles', 'public');
+        $imagePath = 'article/default.png';
+
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $path = $file->storeAs('article', $filename, 'public');
+            $imagePath = 'storage/' . $path;
+        }
 
         $article = Article::create([
             'title' => $request->title,
-            'image' => $image->hashName(),
             'content' => $request->content,
             'status' => $request->status,
-            'users_id' => $request->users_id
+            'image' => $imagePath,
+            'user_id' => auth()->id(),
         ]);
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Data successfully created',
+            'message' => 'Article created successfully',
             'data' => $article
         ], 201);
     }
@@ -66,7 +72,7 @@ class ArticleController extends Controller
 
         if (!$article) {
             return response()->json([
-                'status' => 'failed',
+                'status' => 'error',
                 'message' => 'Data not found'
         ], 404);
     }
@@ -78,65 +84,72 @@ class ArticleController extends Controller
         ], 200);
     }
 
+    public function update(Request $request, $id)
+    {
+        $article = Article::findOrFail($id);
 
-    public function update(Request $request, $id) {
-        $article = Article::find($id);
+        if (auth()->user()->role !== 'admin') {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 403);
+        }
 
-        if (!$article) {
+        $validator = Validator::make($request->all(), [
+            'title' => 'sometimes|required|string|max:255',
+            'content' => 'sometimes|required|string',
+            'status' => 'sometimes|required|in:draft,published',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+        if ($validator->fails()) {
             return response()->json([
-                'status' => 'failed',
-                'message' => 'Data not found'
-        ], 404);
-    }
+                'status' => 'error',
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
 
-    $validator = Validator::make($request->all(), [
-        'title' => 'sometimes|required|string',
-        'image' => 'sometimes|image|mimes:jpg,jpeg,png|max:2048',
-        'content' => 'sometimes|required|string',
-        'status' => ['sometimes', Rule::in(['published', 'draft'])],
-        'users_id' => 'sometimes|exists:users,id'
-    ]);
+        if ($request->hasFile('image')) {
+            if ($article->image && $article->image !== 'storage/article/default.png') {
+                $oldPath = str_replace('storage/', '', $article->image);
+                if (Storage::disk('public')->exists($oldPath)) {
+                    Storage::disk('public')->delete($oldPath);
+                }
+            }
 
-    if ($validator->fails()) {
+            $file = $request->file('image');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $path = $file->storeAs('article', $filename, 'public');
+            $article->image = 'storage/' . $path;
+        }
+
+        $article->update($request->only(['title', 'content', 'status']));
+
         return response()->json([
-            'status' => 'failed',
-            'message' => $validator->errors()
-        ], 422);
-    }
-
-    if ($request->hasFile('image')) {
-        \Storage::disk('public')->delete('articles/' . $article->image);
-        $image = $request->file('image');
-        $image->store('articles', 'public');
-        $article->image = $image->hashName();
-    }
-
-    $article->update($request->except('image'));
-
-    return response()->json([
-        'status' => 'success',
-        'message' => 'Data updated successfully',
-        'data' => $article
+            'status' => 'success',
+            'message' => 'Article updated successfully',
+            'data' => $article
         ], 200);
     }
 
-
-    public function destroy($id) {
+    public function destroy($id)
+    {
         $article = Article::find($id);
 
         if (!$article) {
-            return response()->json([
-            'status' => 'failed',
-            'message' => 'Data not found'
-        ], 404);
-    }
+            return response()->json(['status' => 'error', 'message' => 'Data not found'], 404);
+        }
 
-        \Storage::disk('public')->delete('articles/' . $article->image);
+        if ($article->image && $article->image !== 'storage/article/default.png') {
+            $path = str_replace('storage/', '', $article->image);
+            if (Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->delete($path);
+            }
+        }
+
         $article->delete();
 
         return response()->json([
-        'status' => 'success',
-        'message' => 'Data deleted successfully'
+            'status' => 'success',
+            'message' => 'Article deleted successfully'
         ], 200);
     }
 

@@ -15,8 +15,9 @@ return new class extends Migration
             $table->id();
             $table->string('subject');
             $table->string('description');
-            $table->enum('status', ['pending', 'processed', 'completed']);
-            $table->string('users_id');
+            $table->string('image');
+            $table->enum('status', ['pending', 'processed', 'completed'])->default('pending');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }

@@ -3,66 +3,61 @@
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\ComplaintController;
 use App\Http\Controllers\EmergencyRequestController;
-use App\Http\Controllers\MerchandiseCategoryController;
 use App\Http\Controllers\MerchandiseController;
 use App\Http\Controllers\MerchandiseOrderController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/user', function (Request $request) {
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
-})->middleware('auth:sanctum');
+});
 
+/**
+ * Route guest/umum
+ */
+Route::apiResource('article', ArticleController::class)->only(['index', 'show']);
+Route::apiResource('merchandise', MerchandiseController::class)->only(['index', 'show']);
+Route::apiResource('merchandiseorder', MerchandiseOrderController::class)->only(['index', 'show']);
+
+/**
+ * Route Khusus Auth
+ * */
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:api');
+
+/**
+ * Route User Profile (self)
+ */
+Route::middleware('auth:api')->group(function () {
+    Route::get('/me', [UserController::class, 'me']);
+    Route::put('/user/profile', [UserController::class, 'updateProfile']);
+    Route::delete('/user/profile', [UserController::class, 'destroyOwnAccount']);
+});
 
 
 /**
- * Merchandise API
- * Used for getting all data with index().
- * Used for update data based id with update()
- * Used for create new data with store().
- * User for delete data based id with destroy().
- * Used for show one data with show().
+ * Route user login only
  */
-
- Route::prefix('merchandise')->group(function () {
-     Route::apiResource('/', MerchandiseController::class);
-     Route::apiResource('/category', MerchandiseCategoryController::class);
-     Route::apiResource('/order', MerchandiseOrderController::class);
- });
-
+Route::middleware('auth:api')->group(function () {
+    Route::apiResource('complaint', ComplaintController::class)->only(['index', 'show', 'store']);
+    Route::apiResource('emergency', EmergencyRequestController::class)->only(['store']);
+    Route::apiResource('merchandiseorder', MerchandiseOrderController::class)->only(['index', 'show', 'store']);
+});
 
 /**
- * Article API
- * Used for getting all data with index().
- * Used for update data based id with update()
- * Used for create new data with store().
- * User for delete data based id with destroy().
- * Used for show one data with show().
+ * Route admin only
  */
+Route::middleware(['auth:api', 'role:admin'])->group(function () {
+    Route::post('/article', [ArticleController::class, 'store']);
+    Route::put('/article/{id}', [ArticleController::class, 'update']);
+    Route::delete('/article/{id}', [ArticleController::class, 'destroy']);
 
- Route::apiResource('article', ArticleController::class);
+    Route::apiResource('complaint', ComplaintController::class)->except(['index', 'show', 'store']);
+    Route::apiResource('emergency', EmergencyRequestController::class)->except(['index', 'show', 'store']);
+    Route::apiResource('users', UserController::class)->only(['index', 'show', 'destroy']);
 
-
-/**
- * Complaint API
- * Used for getting all data with index().
- * Used for update data based id with update()
- * Used for create new data with store().
- * User for delete data based id with destroy().
- * Used for show one data with show().
- */
-
- Route::apiResource('complaint', ComplaintController::class);
-
- 
-/**
- * Emergency API
- * Used for getting all data with index().
- * Used for update data based id with update()
- * Used for create new data with store().
- * User for delete data based id with destroy().
- * Used for show one data with show().
- */
-
- Route::apiResource('emergency', EmergencyRequestController::class);
-
+    Route::apiResource('merchandiseorder', MerchandiseOrderController::class)->only(['index', 'show', 'destroy']);
+});
