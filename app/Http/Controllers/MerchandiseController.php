@@ -4,12 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Merchandise;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class MerchandiseController extends Controller
 {
     public function index() {
-        $merchandises = Merchandise::all();
+        $merchandises = Merchandise::with('merchandiseCategory')->get();
 
         // Error handling
         if ($merchandises->isEmpty()) {
@@ -99,19 +100,32 @@ class MerchandiseController extends Controller
         ]);
 
         if ($validator->fails()) {
-        return response()->json([
-            'status' => 'error',
-            'message' => $validator->errors()
-        ], 422);
-    }
+            return response()->json([
+                'status' => 'error',
+                'message' => $validator->errors()
+            ], 422);
+        }
+
+        $data = [
+            'name' => $request->name,
+            'description' => $request->description,
+            'price' => $request->price,
+            'stock' => $request->stock,
+            'merchandise_categories_id' => $request->merchandise_categories_id,
+        ];
 
         if ($request->hasFile('image')) {
             $image = $request->file('image');
             $image->store('merchandises', 'public');
-            $merchandise->image = $image->hashName();
-    }
 
-        $merchandise->update($request->except('image'));
+            if ($merchandise->image) {
+                Storage::disk('public')->delete('merchandises/' . $merchandise->image);
+            }
+
+            $data['image'] = $image->hashName();
+        }
+
+        $merchandise->update($request->except('image'), $data);
 
         return response()->json([
             'status' => 'success',
