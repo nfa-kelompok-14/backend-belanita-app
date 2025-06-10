@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Validator;
 class ArticleController extends Controller
 {
     public function index() {
-        $articles = Article::all();
+        $articles = Article::with('user')->get();
 
         if ($articles->isEmpty()) {
             return response()->json([
@@ -55,7 +55,7 @@ class ArticleController extends Controller
         $article = Article::create([
             'title' => $request->title,
             'content' => $request->content,
-            'status' => $request->status,
+            'status' => $request->status ?? 'draft',
             'image' => $imagePath,
             'user_id' => auth()->id(),
         ]);
