@@ -26,7 +26,11 @@ Route::apiResource('merchandiseorder', MerchandiseOrderController::class)->only(
  * */
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
-Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:api');
+
+Route::middleware(['auth:api'])->group(function () {
+    Route::get('/me', [AuthController::class, 'me']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+});
 
 /**
  * Route User Profile (self)
@@ -41,10 +45,11 @@ Route::middleware('auth:api')->group(function () {
 /**
  * Route user login only
  */
-Route::middleware('auth:api')->group(function () {
+Route::middleware(['auth:api', 'role:user'])->group(function () {
     Route::apiResource('complaint', ComplaintController::class)->only(['index', 'show', 'store']);
     Route::apiResource('emergency', EmergencyRequestController::class)->only(['store']);
-    Route::apiResource('merchandiseorder', MerchandiseOrderController::class)->only(['index', 'show', 'store']);
+    Route::post('merchandiseorder', [MerchandiseOrderController::class, 'store']);
+    Route::delete('merchandiseorder/{id}', [MerchandiseOrderController::class, 'destroy']);
 });
 
 /**
@@ -58,6 +63,5 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
     Route::apiResource('complaint', ComplaintController::class)->except(['index', 'show', 'store']);
     Route::apiResource('emergency', EmergencyRequestController::class)->except(['index', 'show', 'store']);
     Route::apiResource('users', UserController::class)->only(['index', 'show', 'destroy']);
-
-    Route::apiResource('merchandiseorder', MerchandiseOrderController::class)->only(['index', 'show', 'destroy']);
+    Route::get('admin/merchandiseorder', [MerchandiseOrderController::class, 'adminIndex']);
 });

@@ -10,7 +10,7 @@ use Illuminate\Validation\Rule;
 class EmergencyRequestController extends Controller
 {
     public function index() {
-        $emergencies = EmergencyRequest::all();
+        $emergencies = EmergencyRequest::with('user')->get();
 
         // Error handling
         if ($emergencies->isEmpty()) {
@@ -29,8 +29,7 @@ class EmergencyRequestController extends Controller
 
     public function store(Request $request) {
         $validator = Validator::make($request->all(), [
-            'contacted_via' => ['required', Rule::in(['message', 'call'])],
-            'users_id' => 'required|exists:users,id'
+            'contacted_via' => 'required|in:message,call',
         ]);
 
         if ($validator->fails()) {
@@ -40,9 +39,19 @@ class EmergencyRequestController extends Controller
             ], 422);
         }
 
+        // Ambil user
+        $user = auth('api')->user();
+
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Authentication is required to create an emergency request. Please login first.'
+            ], 401);
+        }
+
         $emergency = EmergencyRequest::create([
             'contacted_via' => $request->contacted_via,
-            'users_id' => $request->users_id
+            'user_id' => $user->id
         ]);
 
         return response()->json([
@@ -76,22 +85,36 @@ class EmergencyRequestController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => 'Data not found'
-        ], 404);
-    }
+            ], 404);
+        }
 
         $validator = Validator::make($request->all(), [
-            'contacted_via' => ['sometimes', 'required', Rule::in(['message', 'call'])],
-            'users_id' => 'sometimes|exists:users,id'
+            'contacted_via' => 'sometimes|in:message,call'
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'status' => 'error',
                 'message' => $validator->errors()
-        ], 422);
-    }
+            ], 422);
+        }
 
-        $emergency->update($request->all());
+        // Ambil user
+        $user = auth('api')->user();
+
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Authentication is required to update an emergency request. Please login first.'
+            ], 401);
+        }
+
+        $data = [
+            'contacted_via' => $request->contacted_via,
+            'user_id' => $user->id
+        ];
+
+        $emergency->update($data);
 
             return response()->json([
                 'status' => 'success',
