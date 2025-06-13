@@ -20,6 +20,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
  */
 Route::apiResource('article', ArticleController::class)->only(['index', 'show']);
 Route::apiResource('merchandise', MerchandiseController::class)->only(['index', 'show']);
+Route::apiResource('category', MerchandiseCategoryController::class)->only(['index', 'show']);
 
 /**
  * Route Khusus Auth
@@ -45,7 +46,9 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('complaint', ComplaintController::class)->only(['index', 'show', 'store']);
     Route::apiResource('emergency', EmergencyRequestController::class)->only(['store']);
 
-    Route::apiResource('order', MerchandiseOrderController::class);
+    Route::get('/order', [MerchandiseOrderController::class, 'index']);
+    Route::get('/order/{id}', [MerchandiseOrderController::class, 'show']);
+    Route::post('/order', [MerchandiseOrderController::class, 'store']);
 });
 
 /**
@@ -68,5 +71,6 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
     Route::put('/category{id}', [MerchandiseCategoryController::class, 'update']);
     Route::delete('/category{id}', [MerchandiseCategoryController::class, 'destroy']);
 
-    Route::apiResource('order', MerchandiseOrderController::class)->except(['store']);
+    Route::put('/order/{id}', [MerchandiseOrderController::class, 'update']);
+    Route::delete('/order/{id}', [MerchandiseOrderController::class, 'destroy']);
 });
