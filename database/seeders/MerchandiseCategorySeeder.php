@@ -32,5 +32,8 @@ class MerchandiseCategorySeeder extends Seeder
         MerchandiseCategory::create([
             'name' => 'Home & Living'
         ]);
+        MerchandiseCategory::create([
+            'name' => 'Beauty'
+        ]);
     }
 }
