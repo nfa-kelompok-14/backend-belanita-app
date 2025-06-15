@@ -39,7 +39,7 @@ Route::middleware(['auth:api'])->group(function () {
  * Route User Profile (self)
  */
 Route::middleware('auth:api')->group(function () {
-    Route::get('/me', [UserController::class, 'me']);
+    Route::get('/me', [AuthController::class, 'me']);
     Route::put('/user/profile', [UserController::class, 'updateProfile']);
     Route::delete('/user/profile', [UserController::class, 'destroyOwnAccount']);
 });
