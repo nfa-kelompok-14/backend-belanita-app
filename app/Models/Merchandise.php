@@ -10,5 +10,7 @@ class Merchandise extends Model
 
     protected $fillable = ['name', 'image', 'description', 'price', 'stock', 'merchandise_categories_id'];
 
-    
+    public function merchandiseCategory() {
+        return $this->belongsTo(MerchandiseCategory::class, "merchandise_categories_id");
+    }
 }

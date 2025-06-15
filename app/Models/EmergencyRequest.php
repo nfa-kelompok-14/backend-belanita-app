@@ -8,7 +8,9 @@ class EmergencyRequest extends Model
 {
     protected $table = 'emergency_requests';
 
-    protected $fillable = ['contacted_via', 'users_id'];
+    protected $fillable = ['contacted_via', 'user_id'];
 
-    
+    public function user() {
+        return $this->belongsTo(User::class, "user_id");
+    }
 }

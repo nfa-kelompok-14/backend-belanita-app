@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Merchandise;
 use App\Models\MerchandiseOrder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -10,7 +11,7 @@ use Illuminate\Validation\Rule;
 class MerchandiseOrderController extends Controller
 {
     public function index() {
-        $orders = MerchandiseOrder::all();
+        $orders = MerchandiseOrder::with('user' ,'merchandise')->get();
 
         // Error handling
         if ($orders->isEmpty()) {
@@ -29,11 +30,8 @@ class MerchandiseOrderController extends Controller
 
     public function store(Request $request) {
         $validator = Validator::make($request->all(), [
-            'quantity' => 'required|integer',
-            'total_price' => 'required|integer',
-            'status' => ['required', Rule::in(['pending', 'paid', 'shipped', 'completed'])],
-            'users_id' => 'required|exists:users,id',
-            'merchandise_id' => 'required|exists:merchandises,id'
+            'quantity' => 'required|integer|min:1',
+            'merchandise_id' => 'required|exists:merchandises,id',
         ]);
 
         if ($validator->fails()) {
@@ -43,11 +41,38 @@ class MerchandiseOrderController extends Controller
             ], 422);
         }
 
+        $uniqueCode = "ORD-" . strtoupper(uniqid());
+
+        $user = auth('api')->user();
+
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Authentication is required to place an order. Please login first.'
+            ], 401);
+        }
+
+        // Cek stok barang
+        $merch = Merchandise::find($request->merchandise_id);
+
+        if ($merch->stock < $request->quantity) {
+            return response()->json([
+                'status' => 'error',
+                'message' => "Merchandise is out of stock."
+            ], 400);
+        }
+
+        // Kalkulasi total harga
+        $totalPrice = $merch->price * $request->quantity;
+        $merch->stock -= $request->quantity;
+        $merch->save();
+
         $order = MerchandiseOrder::create([
+            'order_number' => $uniqueCode,
             'quantity' => $request->quantity,
-            'total_price' => $request->total_price,
-            'status' => $request->status,
-            'users_id' => $request->users_id,
+            'total_price' => $totalPrice,
+            'status' => $request->status ?? 'pending',
+            'user_id' => $user->id,
             'merchandise_id' => $request->merchandise_id
         ]);
 
@@ -60,48 +85,77 @@ class MerchandiseOrderController extends Controller
 
     public function show($id) {
         $order = MerchandiseOrder::find($id);
-    
+
         if (!$order) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Data not found'
             ], 404);
         }
-    
+
         return response()->json([
             'status' => 'success',
             'message' => 'Data found',
             'data' => $order
         ], 200);
     }
-    
-    public function update(Request $request, $id) {
+
+    public function update(Request $request, string $id) {
         $order = MerchandiseOrder::find($id);
-    
+
         if (!$order) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Data not found'
             ], 404);
         }
-    
+
         $validator = Validator::make($request->all(), [
             'quantity' => 'sometimes|required|integer',
-            'total_price' => 'sometimes|required|integer',
-            'status' => ['sometimes', 'required', Rule::in(['pending', 'paid', 'shipped', 'completed'])],
-            'users_id' => 'sometimes|required|exists:users,id',
             'merchandise_id' => 'sometimes|required|exists:merchandises,id'
         ]);
-    
+
         if ($validator->fails()) {
             return response()->json([
                 'status' => 'error',
                 'message' => $validator->errors()
             ], 422);
         }
-    
-        $order->update($request->all());
-    
+
+        $user = auth('api')->user();
+
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Authentication is required to replace an order. Please login first.'
+            ], 401);
+        }
+
+        // Cek stok barang
+        $merch = Merchandise::find($request->merchandise_id);
+
+        if ($merch->stock < $request->quantity) {
+            return response()->json([
+                'status' => 'error',
+                "message" => "Merchandise is out of stock."
+            ], 400);
+        }
+
+        // Kalkulasi total harga
+        $totalPrice = $merch->price * $request->quantity;
+        $merch->stock -= $request->quantity;
+        $merch->save();
+
+        $data = [
+            'quantity' => $request->quantity,
+            'total_price' => $totalPrice,
+            'status' => $request->status ?? 'pending',
+            'user_id' => $user->id,
+            'merchandise_id' => $request->merchandise_id
+        ];
+
+        $order->update($request->only('quantity', 'merchandise_id'), $data);
+
         return response()->json([
             'status' => 'success',
             'message' => 'Data successfully updated',
@@ -111,20 +165,20 @@ class MerchandiseOrderController extends Controller
 
     public function destroy($id) {
         $order = MerchandiseOrder::find($id);
-    
+
         if (!$order) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Data not found'
             ], 404);
         }
-    
+
         $order->delete();
-    
+
         return response()->json([
             'status' => 'success',
             'message' => 'Data successfully deleted'
         ], 200);
-    }    
-    
+    }
+
 }

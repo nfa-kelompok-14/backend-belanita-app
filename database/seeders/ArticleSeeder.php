@@ -72,7 +72,40 @@ class ArticleSeeder extends Seeder
             Hari Perempuan Sedunia yang diperingati hari ini, 8 Maret 2025, mengingatkan banyak pekerjaan rumah
             harus diselesaikan. Source: https://www.kompas.id/artikel/hari-perempuan-sedunia-dan-pr-mengatasi-kekerasan-berlapis-di-pemilu?',
             'status' => 'published',
-            'user_id' => 4
+            'user_id' => 1
+
+        ]);
+        Article::create([
+            'title' => 'Hari Perempuan Sedunia dan PR Mengatasi Kekerasan Berlapis dalam Pemilu',
+            'image' => 'article/article-8.jpg',
+            'content' => 'Tidak banyak yang menyadari bahwa perempuan peserta pemilu mengalami berlapis bentuk kekerasan
+            dalam Pemilu 2024. Ironisnya, salah satu pelaku kekerasan adalah lembaga negara penyelenggara pemilu.
+            Hari Perempuan Sedunia yang diperingati hari ini, 8 Maret 2025, mengingatkan banyak pekerjaan rumah
+            harus diselesaikan. Source: https://www.kompas.id/artikel/hari-perempuan-sedunia-dan-pr-mengatasi-kekerasan-berlapis-di-pemilu?',
+            'status' => 'published',
+            'user_id' => 1
+
+        ]);
+        Article::create([
+            'title' => 'Hari Perempuan Sedunia dan PR Mengatasi Kekerasan Berlapis dalam Pemilu',
+            'image' => 'article/article-9.jpg',
+            'content' => 'Tidak banyak yang menyadari bahwa perempuan peserta pemilu mengalami berlapis bentuk kekerasan
+            dalam Pemilu 2024. Ironisnya, salah satu pelaku kekerasan adalah lembaga negara penyelenggara pemilu.
+            Hari Perempuan Sedunia yang diperingati hari ini, 8 Maret 2025, mengingatkan banyak pekerjaan rumah
+            harus diselesaikan. Source: https://www.kompas.id/artikel/hari-perempuan-sedunia-dan-pr-mengatasi-kekerasan-berlapis-di-pemilu?',
+            'status' => 'draft',
+            'user_id' => 1
+
+        ]);
+        Article::create([
+            'title' => 'Hari Perempuan Sedunia dan PR Mengatasi Kekerasan Berlapis dalam Pemilu',
+            'image' => 'article/article-10.jpg',
+            'content' => 'Tidak banyak yang menyadari bahwa perempuan peserta pemilu mengalami berlapis bentuk kekerasan
+            dalam Pemilu 2024. Ironisnya, salah satu pelaku kekerasan adalah lembaga negara penyelenggara pemilu.
+            Hari Perempuan Sedunia yang diperingati hari ini, 8 Maret 2025, mengingatkan banyak pekerjaan rumah
+            harus diselesaikan. Source: https://www.kompas.id/artikel/hari-perempuan-sedunia-dan-pr-mengatasi-kekerasan-berlapis-di-pemilu?',
+            'status' => 'published',
+            'user_id' => 1
 
         ]);
     }
