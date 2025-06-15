@@ -35,6 +35,7 @@ class ArticleSeeder extends Seeder
             'image' => 'article/article-3.jpg',
             'content' => 'Dinas PPAPP DKI Jakarta mencatat 356 kasus kekerasan terhadap anak dan perempuan
             sejak Januari hingga 26 Februari 2025. Angka ini menunjukkan bahwa kekerasan terhadap kelompok rentan
+
             masih menjadi masalah serius di ibu kota. Source: https://news.detik.com/berita/d-7799359/pemprov-jakarta-356-anak-perempuan-jadi-korban-kekerasan-sejak-awal-2025?',
             'status' => 'published',
             'user_id' => 4

@@ -4,22 +4,29 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
+use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
+
+    /**
+     * Register Function
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name'         => 'required|string|max:100',
-            'email'        => 'required|email|unique:users',
-            'password'     => 'required|min:6',
-            'role'         => 'required|in:admin,user', // sesuaikan ENUM
-            'phone_number' => 'nullable|string|max:20',
-            'address'      => 'nullable|string|max:255',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users',
+            'password' => 'required|min:8',
+            'phone_number' => 'required|string|max:20',
+            'address' => 'required|string|max:255',
+
         ]);
 
         if ($validator->fails()) {
@@ -49,45 +56,111 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        // 1. Setup validator
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'password' => 'required'
         ]);
 
-        // 2. Cek validator
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
 
-        // 3. Get kredensial dari request
         $credentials = $request->only('email', 'password');
 
-        // 4. Cek isFailed
-        if (!$token = auth()->guard('api')->attempt($credentials)) {
+        if (!$token = auth('api')->attempt($credentials)) {
             return response()->json([
-                'success' => false,
-                'message' => 'Email atau Password Anda salah!'
+                'status' => 'error',
+                'message' => 'Invalid email or password'
             ], 401);
         }
 
-        // 5. Cek isSuccess
+        return $this->respondWithToken($token);
+    }
+
+    /**
+     * Logout Function
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function logout()
+    {
+        try {
+            JWTAuth::invalidate(JWTAuth::getToken());
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Logged out successfully'
+            ], 200);
+        } catch (JWTException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to logout, token invalid or expired.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Get Me Function
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function me()
+    {
         return response()->json([
-            'success' => true,
-            'message' => 'Login successfully',
-            'user' => auth()->guard('api')->user(),
-            'token' => $token,
-        ], 200);
-    }
-    public function logout(Request $request)
-    {
-        $request->user()->currentAccessToken()->delete();
-
-        return response()->json(['message' => 'Logged out']);
+            'status' => 'success',
+            'user' => auth('api')->user()
+        ]);
     }
 
-    public function user(Request $request)
+    /**
+     * Delete Own Profile Function
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function destroyOwnAccount(Request $request)
     {
-        return response()->json($request->user());
+        $user = auth('api')->user();
+
+        $request->validate([
+            'password' => 'required|string'
+        ]);
+
+        if (!Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Password salah.'
+            ], 401);
+        }
+
+        if ($user->image && $user->image !== 'storage/profile/user_pict_default.png') {
+            $path = str_replace('storage/', '', $user->image);
+            if (Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->delete($path);
+            }
+        }
+
+        JWTAuth::invalidate(JWTAuth::getToken());
+        $user->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Akun berhasil dihapus.'
+        ]);
     }
+
+    /**
+     * FUnction Response With Token
+     * @param $token
+     * @return \Illuminate\Http\JsonResponse
+     */
+    protected function respondWithToken($token)
+    {
+        return response()->json([
+            'status' => 'success',
+            'access_token' => $token,
+            'token_type' => 'bearer',
+            'expires_in' => auth('api')->factory()->getTTL() * 60,
+            'user' => auth('api')->user()
+        ]);
+    }
+
+
 }

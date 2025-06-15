@@ -20,6 +20,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::apiResource('article', ArticleController::class)->only(['index', 'show']);
 Route::apiResource('merchandise', MerchandiseController::class)->only(['index', 'show']);
 Route::apiResource('merchandiseorder', MerchandiseOrderController::class)->only(['index', 'show']);
+Route::apiResource('category', MerchandiseCategoryController::class)->only(['index', 'show']);
 
 /**
  * Route Khusus Auth
@@ -27,10 +28,12 @@ Route::apiResource('merchandiseorder', MerchandiseOrderController::class)->only(
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
+
 Route::middleware(['auth:api'])->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
 });
+
 
 /**
  * Route User Profile (self)
@@ -52,6 +55,7 @@ Route::middleware(['auth:api', 'role:user'])->group(function () {
     Route::delete('merchandiseorder/{id}', [MerchandiseOrderController::class, 'destroy']);
 });
 
+
 /**
  * Route admin only
  */
@@ -60,8 +64,18 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
     Route::put('/article/{id}', [ArticleController::class, 'update']);
     Route::delete('/article/{id}', [ArticleController::class, 'destroy']);
 
-    Route::apiResource('complaint', ComplaintController::class)->except(['index', 'show', 'store']);
-    Route::apiResource('emergency', EmergencyRequestController::class)->except(['index', 'show', 'store']);
+    Route::apiResource('complaint', ComplaintController::class)->except(['store']);
+    Route::apiResource('emergency', EmergencyRequestController::class)->except(['store']);
     Route::apiResource('users', UserController::class)->only(['index', 'show', 'destroy']);
-    Route::get('admin/merchandiseorder', [MerchandiseOrderController::class, 'adminIndex']);
+
+    Route::post('/merchandise', [MerchandiseController::class, 'store']);
+    Route::put('/merchandise/{id}', [MerchandiseController::class, 'update']);
+    Route::delete('/merchandise/{id}', [MerchandiseController::class, 'destroy']);
+
+    Route::post('/category', [MerchandiseCategoryController::class, 'store']);
+    Route::put('/category{id}', [MerchandiseCategoryController::class, 'update']);
+    Route::delete('/category{id}', [MerchandiseCategoryController::class, 'destroy']);
+
+    Route::put('/order/{id}', [MerchandiseOrderController::class, 'update']);
+    Route::delete('/order/{id}', [MerchandiseOrderController::class, 'destroy']);
 });
