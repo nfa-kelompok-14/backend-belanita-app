@@ -3,7 +3,6 @@
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\ComplaintController;
 use App\Http\Controllers\EmergencyRequestController;
-use App\Http\Controllers\MerchandiseCategoryController;
 use App\Http\Controllers\MerchandiseController;
 use App\Http\Controllers\MerchandiseOrderController;
 use App\Http\Controllers\AuthController;
@@ -20,6 +19,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
  */
 Route::apiResource('article', ArticleController::class)->only(['index', 'show']);
 Route::apiResource('merchandise', MerchandiseController::class)->only(['index', 'show']);
+Route::apiResource('merchandiseorder', MerchandiseOrderController::class)->only(['index', 'show']);
 Route::apiResource('category', MerchandiseCategoryController::class)->only(['index', 'show']);
 
 /**
@@ -27,7 +27,13 @@ Route::apiResource('category', MerchandiseCategoryController::class)->only(['ind
  * */
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
-Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:api');
+
+
+Route::middleware(['auth:api'])->group(function () {
+    Route::get('/me', [AuthController::class, 'me']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+});
+
 
 /**
  * Route User Profile (self)
@@ -42,14 +48,13 @@ Route::middleware('auth:api')->group(function () {
 /**
  * Route user login only
  */
-Route::middleware('auth:api')->group(function () {
+Route::middleware(['auth:api', 'role:user'])->group(function () {
     Route::apiResource('complaint', ComplaintController::class)->only(['index', 'show', 'store']);
     Route::apiResource('emergency', EmergencyRequestController::class)->only(['store']);
-
-    Route::get('/order', [MerchandiseOrderController::class, 'index']);
-    Route::get('/order/{id}', [MerchandiseOrderController::class, 'show']);
-    Route::post('/order', [MerchandiseOrderController::class, 'store']);
+    Route::post('merchandiseorder', [MerchandiseOrderController::class, 'store']);
+    Route::delete('merchandiseorder/{id}', [MerchandiseOrderController::class, 'destroy']);
 });
+
 
 /**
  * Route admin only
