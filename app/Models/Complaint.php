@@ -8,10 +8,16 @@ class Complaint extends Model
 {
     protected $table = 'complaints';
 
-    protected $fillable = ['subject', 'description', 'status', 'user_id'];
+    protected $fillable = ['subject', 'description', 'status', 'user_id', 'location', 'image'];
 
     public function user() {
         return $this->belongsTo(User::class, "user_id");
     }
+
+    public function feedbacks()
+    {
+        return $this->hasMany(Feedback::class);
+    }
+
 
 }

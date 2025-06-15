@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('subject');
             $table->string('description');
             $table->string('image');
+            $table->string('location')->nullable();
             $table->enum('status', ['pending', 'processed', 'completed'])->default('pending');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->timestamps();

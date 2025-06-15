@@ -20,7 +20,8 @@ class DatabaseSeeder extends Seeder
             EmergencyRequestSeeder::class,
             MerchandiseCategorySeeder::class,
             MerchandiseSeeder::class,
-            MerchandiseOrderSeeder::class
+            MerchandiseOrderSeeder::class,
+            FeedbackSeeder::class
         ]);
     }
 }
