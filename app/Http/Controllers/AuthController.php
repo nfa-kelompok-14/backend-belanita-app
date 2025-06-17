@@ -12,7 +12,6 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
-
     /**
      * Register Function
      * @param Request $request
@@ -26,7 +25,6 @@ class AuthController extends Controller
             'password' => 'required|min:8',
             'phone_number' => 'required|string|max:20',
             'address' => 'required|string|max:255',
-
         ]);
 
         if ($validator->fails()) {
@@ -34,26 +32,27 @@ class AuthController extends Controller
         }
 
         $user = User::create([
-            'name'         => $request->name,
-            'email'        => $request->email,
-            'password'     => Hash::make($request->password),
-            'role'         => $request->role,
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => bcrypt($request->password),
             'phone_number' => $request->phone_number,
-            'address'      => $request->address,
+            'address' => $request->address,
+            'image' => 'storage/profile/user_pict_default.png',
+            'role' => 'user',
         ]);
-
-        $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
+            'status' => 'success',
             'message' => 'User registered successfully',
-            'access_token' => $token,
-            'token_type' => 'Bearer',
-        ]);
+            'data' => $user
+        ], 201);
     }
 
-    
-
-
+    /**
+     * Login Function
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
