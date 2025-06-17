@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->string('image')->default('article/default.png');
+            $table->string('slug')->unique();
             $table->text('content');
             $table->enum('status', ['draft', 'published'])->default('draft');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');

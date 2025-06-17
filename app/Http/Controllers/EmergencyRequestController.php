@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\EmergencyRequestResource;
 use App\Models\EmergencyRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -22,14 +23,17 @@ class EmergencyRequestController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => 'Data found',
-                'data' => $emergencies
+                'data' => EmergencyRequestResource::collection($emergencies)
             ], 200);
         }
     }
 
     public function store(Request $request) {
+
         $validator = Validator::make($request->all(), [
             'contacted_via' => 'required|in:message,call',
+            'lat' => 'required|numeric',
+            'long' => 'required|numeric',
         ]);
 
         if ($validator->fails()) {
@@ -51,13 +55,16 @@ class EmergencyRequestController extends Controller
 
         $emergency = EmergencyRequest::create([
             'contacted_via' => $request->contacted_via,
-            'user_id' => $user->id
+            'user_id' => $user->id,
+            'lat' => $request->lat,
+            'long' => $request->long,
+            'notification_status' => 'pending'
         ]);
 
         return response()->json([
             'status' => 'success',
             'message' => 'Data successfully created',
-            'data' => $emergency
+            'data' => new EmergencyRequestResource($emergency)
         ], 201);
     }
 
@@ -74,7 +81,7 @@ class EmergencyRequestController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Data found',
-            'data' => $emergency
+            'data' => new EmergencyRequestResource($emergency)
         ], 200);
     }
 
@@ -89,7 +96,7 @@ class EmergencyRequestController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'contacted_via' => 'sometimes|in:message,call'
+            'status' => ['required', Rule::in(['pending', 'notified', 'resolved'])],
         ]);
 
         if ($validator->fails()) {
@@ -99,19 +106,13 @@ class EmergencyRequestController extends Controller
             ], 422);
         }
 
-        // Ambil user
-        $user = auth('api')->user();
-
-        if (!$user) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Authentication is required to update an emergency request. Please login first.'
-            ], 401);
-        }
 
         $data = [
-            'contacted_via' => $request->contacted_via,
-            'user_id' => $user->id
+            'notification_status' => $request->status,
+            'user_id' => $request->user_id ?? $emergency->user_id,
+            'contacted_via' => $emergency->contacted_via, 
+            'lat' => $emergency->lat, 
+            'long' => $emergency->long
         ];
 
         $emergency->update($data);
@@ -119,7 +120,7 @@ class EmergencyRequestController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => 'Data successfully updated',
-                'data' => $emergency
+                'data' => new EmergencyRequestResource($emergency)
         ], 200);
     }
 

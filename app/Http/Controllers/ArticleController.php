@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\ArticleResource;
 use App\Models\Article;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class ArticleController extends Controller
 {
@@ -22,7 +24,7 @@ class ArticleController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Data found',
-            'data' => $articles
+            'data' => ArticleResource::collection($articles)
         ], 200);
     }
 
@@ -49,7 +51,7 @@ class ArticleController extends Controller
             $file = $request->file('image');
             $filename = time() . '_' . $file->getClientOriginalName();
             $path = $file->storeAs('article', $filename, 'public');
-            $imagePath = 'storage/' . $path;
+            $imagePath =  $path;
         }
 
         $article = Article::create([
@@ -57,6 +59,7 @@ class ArticleController extends Controller
             'content' => $request->content,
             'status' => $request->status ?? 'draft',
             'image' => $imagePath,
+            'slug' => Str::slug($request->title) . '-' . time(),
             'user_id' => auth()->id(),
         ]);
 
@@ -67,8 +70,8 @@ class ArticleController extends Controller
         ], 201);
     }
 
-    public function show($id) {
-        $article = Article::find($id);
+    public function show($slug) {
+        $article = Article::where('slug', $slug)->first();
 
         if (!$article) {
             return response()->json([
@@ -80,13 +83,17 @@ class ArticleController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Data found',
-            'data' => $article
+            'data' => new ArticleResource($article)
         ], 200);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $slug)
     {
-        $article = Article::findOrFail($id);
+        $article = Article::where('slug', $slug)->first();
+
+        if (!$article) {
+            return response()->json(['status' => 'error', 'message' => 'Data not found'], 404);
+        }
 
         if (auth()->user()->role !== 'admin') {
             return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 403);
@@ -107,9 +114,10 @@ class ArticleController extends Controller
             ], 422);
         }
 
+        // Hapus gambar lama kalau upload gambar baru
         if ($request->hasFile('image')) {
             if ($article->image && $article->image !== 'storage/article/default.png') {
-                $oldPath = str_replace('storage/', '', $article->image);
+                $oldPath = str_replace('', '', $article->image);
                 if (Storage::disk('public')->exists($oldPath)) {
                     Storage::disk('public')->delete($oldPath);
                 }
@@ -118,10 +126,23 @@ class ArticleController extends Controller
             $file = $request->file('image');
             $filename = time() . '_' . $file->getClientOriginalName();
             $path = $file->storeAs('article', $filename, 'public');
-            $article->image = 'storage/' . $path;
+            $article->image = '' . $path;
         }
 
-        $article->update($request->only(['title', 'content', 'status']));
+        // Update field-field lain
+        if ($request->filled('title')) {
+            $article->title = $request->title;
+            // Generate slug baru dari title baru
+            $article->slug = Str::slug($request->title) . '-' . time();
+        }
+        if ($request->filled('content')) {
+            $article->content = $request->content;
+        }
+        if ($request->filled('status')) {
+            $article->status = $request->status;
+        }
+
+        $article->save();
 
         return response()->json([
             'status' => 'success',

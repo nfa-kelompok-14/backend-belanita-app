@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\MerchandiseResource;
 use App\Models\Merchandise;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+
 
 class MerchandiseController extends Controller
 {
@@ -22,7 +24,7 @@ class MerchandiseController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => 'Data found',
-                'data' => $merchandises
+                'data' => MerchandiseResource::collection($merchandises),
             ], 200);
         }
     }
@@ -44,12 +46,18 @@ class MerchandiseController extends Controller
             ], 422);
         }
 
-        $image = $request->file('image');
-        $image->store('merchandises', 'public');
+        $imagePath = null;
+
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $path = $file->storeAs('merch', $filename, 'public');
+            $imagePath = 'storage/' . $path;
+        }
 
         $merchandise = Merchandise::create([
             'name' => $request->name,
-            'image' => $image->hashName(),
+            'image' => $imagePath,
             'description' => $request->description,
             'price' => $request->price,
             'stock' => $request->stock,
@@ -63,12 +71,12 @@ class MerchandiseController extends Controller
         ], 201);
     }
 
-    public function show($id) {
-        $merchandise = Merchandise::find($id);
+    public function show($slug) {
+        $merchandise = Merchandise::where('slug', $slug)->first();
 
         if (!$merchandise) {
         return response()->json([
-            'status' => 'error',
+            'status' => 'error',    
             'message' => 'Data not found'
         ], 404);
     }
@@ -76,7 +84,7 @@ class MerchandiseController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Data found',
-            'data' => $merchandise
+            'data' => new MerchandiseResource($merchandise)
         ], 200);
     }
 
@@ -114,15 +122,19 @@ class MerchandiseController extends Controller
             'merchandise_categories_id' => $request->merchandise_categories_id,
         ];
 
+        // Hapus gambar lama kalau upload gambar baru
         if ($request->hasFile('image')) {
-            $image = $request->file('image');
-            $image->store('merchandises', 'public');
-
-            if ($merchandise->image) {
-                Storage::disk('public')->delete('merchandises/' . $merchandise->image);
+            if ($merchandise->image && $merchandise->image !== 'storage/merch/default.png') {
+                $oldPath = str_replace('storage/', '', $merchandise->image);
+                if (Storage::disk('public')->exists($oldPath)) {
+                    Storage::disk('public')->delete($oldPath);
+                }
             }
 
-            $data['image'] = $image->hashName();
+            $file = $request->file('image');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $path = $file->storeAs('merch', $filename, 'public');
+            $merchandise->image = 'storage/' . $path;
         }
 
         $merchandise->update($request->except('image'), $data);
@@ -145,7 +157,7 @@ class MerchandiseController extends Controller
     }
 
         if ($merchandise->image) {
-        \Storage::disk('public')->delete('merchandises/' . $merchandise->image);
+            Storage::disk('public')->delete('merchandises/' . $merchandise->image);
     }
 
         $merchandise->delete();

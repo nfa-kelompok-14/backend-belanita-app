@@ -11,13 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('emergency_requests', function (Blueprint $table) {
+        Schema::create('feedback', function (Blueprint $table) {
             $table->id();
-            $table->enum('contacted_via', ['message', 'call']);
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->decimal('lat', 10, 7);
-            $table->decimal('long', 10, 7);
-            $table->enum('notification_status', ['pending', 'notified', 'resolved'])->default('pending');
+            $table->foreignId('complaint_id')->constrained('complaints')->onDelete('cascade');
+            $table->text('message');
             $table->timestamps();
         });
     }
@@ -27,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('emergency_requests');
+        Schema::dropIfExists('feedback');
     }
 };

@@ -6,6 +6,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use App\Http\Resources\UserResource;
+
 
 class UserController extends Controller {
 
@@ -23,12 +25,11 @@ class UserController extends Controller {
         return response()->json([
             'status' => 'success',
             'message' => 'Users retrieved successfully',
-            'data' => $users
+            'data' => UserResource::collection($users)
         ], 200);
     }
 
     public function show($id) {
-
         $user = User::find($id);
 
         if (!$user) {
@@ -41,7 +42,7 @@ class UserController extends Controller {
         return response()->json([
             'status' => 'success',
             'message' => 'User found',
-            'data' => $user
+            'data' => new UserResource($user) 
         ], 200);
     }
 
@@ -117,6 +118,22 @@ class UserController extends Controller {
         return response()->json([
             'status' => 'success',
             'message' => 'User berhasil dihapus.'
+        ]);
+    }
+
+    public function me() {
+        $user = auth('api')->user();
+
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'User not authenticated'
+            ], 401);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => new UserResource($user)
         ]);
     }
 

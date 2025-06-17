@@ -8,9 +8,11 @@ class Article extends Model
 {
     protected $table = 'articles';
 
-    protected $fillable = ['title', 'image', 'content', 'status', 'user_id'];
+    protected $fillable = ['title', 'image', 'content', 'status', 'user_id', 'slug'];
 
     public function user() {
         return $this->belongsTo(User::class, "user_id");
     }
 }
+
+
