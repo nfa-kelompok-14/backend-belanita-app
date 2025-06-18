@@ -44,9 +44,7 @@ Route::middleware('auth:api')->group(function () {
  * Route user login only
  */
 Route::middleware('auth:api')->group(function () {
-    Route::post('/complaint', [ComplaintController::class, 'store']);
-    Route::get('/complaint/user', [ComplaintController::class, 'userComplaints']);
-    Route::apiResource('complaint', ComplaintController::class)->only(['index', 'show', 'store', 'update']);
+    Route::apiResource('complaint', ComplaintController::class)->only(['index', 'show', 'store']);
     Route::apiResource('emergency', EmergencyRequestController::class)->only(['store']);
 
     Route::get('/order', [MerchandiseOrderController::class, 'index']);

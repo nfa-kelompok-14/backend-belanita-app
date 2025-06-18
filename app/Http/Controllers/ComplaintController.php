@@ -136,6 +136,22 @@ class ComplaintController extends Controller
             ], 401);
         }
 
+        // Hapus gambar lama kalau upload gambar baru
+        if ($request->hasFile('image')) {
+            if ($complaint->image && $complaint->image !== null) {
+                $oldPath = str_replace('storage/', '', $complaint->image);
+                if (Storage::disk('public')->exists($oldPath)) {
+                    Storage::disk('public')->delete($oldPath);
+                }
+            }
+
+            $file = $request->file('image');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $path = $file->storeAs('pengaduan', $filename, 'public');
+            $complaint->image = 'storage/' . $path;
+        }
+
+
         if ($request->hasFile('image')) {
             if ($complaint->image) {
                 $oldPath = str_replace('storage/', '', $complaint->image);
