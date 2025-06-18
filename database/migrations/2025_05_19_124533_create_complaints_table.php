@@ -13,6 +13,14 @@ return new class extends Migration
     {
         Schema::create('complaints', function (Blueprint $table) {
             $table->id();
+            $table->string('subject');
+            $table->string('description');
+            $table->string('image');
+            $table->string('phone');
+            $table->date('date');
+            $table->string('location')->nullable();
+            $table->enum('status', ['pending', 'processed', 'completed'])->default('pending');
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->timestamps();
         });
     }

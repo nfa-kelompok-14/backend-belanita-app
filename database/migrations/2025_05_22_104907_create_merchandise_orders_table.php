@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('articles', function (Blueprint $table) {
+        Schema::create('merchandise_orders', function (Blueprint $table) {
             $table->id();
-            $table->string('title');
-            $table->string('image')->default('article/default.png');
-            $table->string('slug')->unique();
-            $table->text('content');
-            $table->enum('status', ['draft', 'published'])->default('draft');
+            $table->string('order_number');
+            $table->integer('quantity');
+            $table->integer('total_price');
+            $table->enum('status', ['pending', 'paid', 'shipped', 'completed'])->default('pending');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('merchandise_id')->constrained('merchandises')->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('articles');
+        Schema::dropIfExists('merchandise_orders');
     }
 };
