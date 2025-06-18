@@ -87,7 +87,6 @@ class ArticleController extends Controller
         ], 200);
     }
 
-
     public function update(Request $request, $slug)
     {
         $article = Article::where('slug', $slug)->first();
@@ -118,7 +117,7 @@ class ArticleController extends Controller
         // Hapus gambar lama kalau upload gambar baru
         if ($request->hasFile('image')) {
             if ($article->image && $article->image !== 'storage/article/default.png') {
-                $oldPath = str_replace('storage/', '', $article->image);
+                $oldPath = str_replace('', '', $article->image);
                 if (Storage::disk('public')->exists($oldPath)) {
                     Storage::disk('public')->delete($oldPath);
                 }
@@ -127,7 +126,7 @@ class ArticleController extends Controller
             $file = $request->file('image');
             $filename = time() . '_' . $file->getClientOriginalName();
             $path = $file->storeAs('article', $filename, 'public');
-            $article->image = 'storage/' . $path;
+            $article->image = '' . $path;
         }
 
         // Update field-field lain
