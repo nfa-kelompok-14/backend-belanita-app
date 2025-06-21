@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\MerchandiseCategory; 
 
 class Merchandise extends Model
 {
@@ -18,6 +19,6 @@ class Merchandise extends Model
         'merchandise_category_id',
     ];
     public function merchandiseCategory() {
-        return $this->belongsTo(merchandiseCategory::class, "merchandise_category_id");
+        return $this->belongsTo(MerchandiseCategory::class, "merchandise_category_id");
     }
 }
