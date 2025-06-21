@@ -128,66 +128,77 @@ class MerchandiseOrderController extends Controller
 
     public function update(Request $request, string $id) {
         $order = MerchandiseOrder::find($id);
-
+    
         if (!$order) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Data not found'
             ], 404);
         }
-
+    
         $validator = Validator::make($request->all(), [
             'quantity' => 'sometimes|required|integer',
             'merchandise_id' => 'sometimes|required|exists:merchandises,id'
         ]);
-
+    
         if ($validator->fails()) {
             return response()->json([
                 'status' => 'error',
                 'message' => $validator->errors()
             ], 422);
         }
-
+    
         $user = auth('api')->user();
-
+    
         if (!$user) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Authentication is required to replace an order. Please login first.'
             ], 401);
         }
-
-        // Cek stok barang
-        $merch = Merchandise::find($request->merchandise_id);
-
-        if ($merch->stock < $request->quantity) {
-            return response()->json([
-                'status' => 'error',
-                "message" => "Merchandise is out of stock."
-            ], 400);
+    
+        // Default ambil total price lama
+        $totalPrice = $order->total_price;
+    
+        // Update stok dan hitung ulang total kalau quantity & merchandise_id dikirim
+        if ($request->has('merchandise_id') && $request->has('quantity')) {
+            $merch = Merchandise::find($request->merchandise_id);
+    
+            if (!$merch) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Merchandise not found'
+                ], 404);
+            }
+    
+            if ($merch->stock < $request->quantity) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Merchandise is out of stock'
+                ], 400);
+            }
+    
+            $merch->stock -= $request->quantity;
+            $merch->save();
+    
+            $totalPrice = $merch->price * $request->quantity;
         }
-
-        // Kalkulasi total harga
-        $totalPrice = $merch->price * $request->quantity;
-        $merch->stock -= $request->quantity;
-        $merch->save();
-
-        $data = [
-            'quantity' => $request->quantity,
+    
+        // Update order
+        $order->update([
+            'quantity' => $request->quantity ?? $order->quantity,
+            'merchandise_id' => $request->merchandise_id ?? $order->merchandise_id,
+            'status' => $request->status ?? $order->status,
             'total_price' => $totalPrice,
-            'status' => $request->status ?? 'paid',
-            'user_id' => $user->id,
-            'merchandise_id' => $request->merchandise_id
-        ];
-
-        $order->update($request->only('quantity', 'merchandise_id'), $data);
-
+        ]);
+    
         return response()->json([
             'status' => 'success',
             'message' => 'Data successfully updated',
             'data' => $order
         ], 200);
     }
+    
 
     public function destroy($id) {
         $order = MerchandiseOrder::find($id);

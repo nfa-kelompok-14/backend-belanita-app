@@ -123,4 +123,12 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+//     'aliases' => [
+//     // Alias bawaan Laravel...
+//     'App' => Illuminate\Support\Facades\App::class,
+//     'Artisan' => Illuminate\Support\Facades\Artisan::class,
+//     // Tambahkan ini:
+//     'JWTAuth' => Tymon\JWTAuth\Facades\JWTAuth::class,
+// ],
+
 ];
