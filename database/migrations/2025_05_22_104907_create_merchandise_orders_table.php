@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('order_number');
             $table->integer('quantity');
             $table->integer('total_price');
-            $table->enum('status', ['pending', 'paid', 'shipped', 'completed'])->default('pending');
+            $table->enum('status', [ 'paid', 'shipped', 'completed'])->default('paid');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('merchandise_id')->constrained('merchandises')->onDelete('cascade');
             $table->timestamps();

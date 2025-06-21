@@ -7,12 +7,17 @@ use App\Models\Merchandise;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 
 class MerchandiseController extends Controller
 {
     public function index() {
-        $merchandises = Merchandise::with('merchandiseCategory')->get();
+        $query = Merchandise::with('merchandiseCategory');
+
+        $query->orderBy('created_at', 'desc');
+
+        $merchandises = $query->get();
 
         // Error handling
         if ($merchandises->isEmpty()) {
@@ -28,15 +33,16 @@ class MerchandiseController extends Controller
             ], 200);
         }
     }
+    
 
     public function store(Request $request) {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:100',
-            'image' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'description' => 'required|string',
-            'price' => 'required|integer',
+           'price' => 'required|numeric|min:0',
             'stock' => 'required|integer',
-            'merchandise_categories_id' => 'required|exists:merchandise_categories,id'
+            'merchandise_category_id' => 'required|exists:merchandise_categories,id'
         ]);
 
         if ($validator->fails()) {
@@ -51,17 +57,18 @@ class MerchandiseController extends Controller
         if ($request->hasFile('image')) {
             $file = $request->file('image');
             $filename = time() . '_' . $file->getClientOriginalName();
-            $path = $file->storeAs('merch', $filename, 'public');
-            $imagePath = 'storage/' . $path;
+            $path = $file->storeAs('merchandises', $filename, 'public');
+            $imagePath = '' . $path;
         }
 
         $merchandise = Merchandise::create([
             'name' => $request->name,
             'image' => $imagePath,
+            'slug' => Str::slug($request->name),
             'description' => $request->description,
             'price' => $request->price,
             'stock' => $request->stock,
-            'merchandise_categories_id' => $request->merchandise_categories_id
+            'merchandise_category_id' => $request->merchandise_category_id
         ]);
 
         return response()->json([
@@ -104,7 +111,7 @@ class MerchandiseController extends Controller
             'description' => 'sometimes|required|string',
             'price' => 'sometimes|required|integer',
             'stock' => 'sometimes|required|integer',
-            'merchandise_categories_id' => 'sometimes|required|exists:merchandise_categories,id'
+            'merchandise_category_id' => 'sometimes|required|exists:merchandise_categories,id'
         ]);
 
         if ($validator->fails()) {
@@ -114,18 +121,18 @@ class MerchandiseController extends Controller
             ], 422);
         }
 
-        $data = [
-            'name' => $request->name,
-            'description' => $request->description,
-            'price' => $request->price,
-            'stock' => $request->stock,
-            'merchandise_categories_id' => $request->merchandise_categories_id,
-        ];
+        $data = $request->only([
+            'name',
+            'description',
+            'price',
+            'stock',
+            'merchandise_category_id',
+        ]);
 
         // Hapus gambar lama kalau upload gambar baru
         if ($request->hasFile('image')) {
-            if ($merchandise->image && $merchandise->image !== 'storage/merch/default.png') {
-                $oldPath = str_replace('storage/', '', $merchandise->image);
+            if ($merchandise->image && $merchandise->image !== 'merchandises/default.png') {
+                $oldPath = str_replace('', '', $merchandise->image);
                 if (Storage::disk('public')->exists($oldPath)) {
                     Storage::disk('public')->delete($oldPath);
                 }
@@ -133,11 +140,16 @@ class MerchandiseController extends Controller
 
             $file = $request->file('image');
             $filename = time() . '_' . $file->getClientOriginalName();
-            $path = $file->storeAs('merch', $filename, 'public');
-            $merchandise->image = 'storage/' . $path;
+            $path = $file->storeAs('merchandises', $filename, 'public');
+            $merchandise->image = '' . $path;
         }
 
-        $merchandise->update($request->except('image'), $data);
+        if ($request->filled('name')) {
+            $merchandise->name = $request->name;
+            $merchandise->slug = Str::slug($request->name);
+        }
+
+        $merchandise->update($data);
 
         return response()->json([
             'status' => 'success',

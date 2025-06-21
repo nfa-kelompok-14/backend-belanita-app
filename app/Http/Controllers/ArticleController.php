@@ -11,8 +11,17 @@ use Illuminate\Support\Str;
 
 class ArticleController extends Controller
 {
-    public function index() {
-        $articles = Article::with('user')->get();
+    public function index(Request $request) 
+    {
+        $query = Article::with('user');
+
+        if ($request->has('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $query->orderBy('created_at', 'desc');
+
+        $articles = $query->get();
 
         if ($articles->isEmpty()) {
             return response()->json([
@@ -59,7 +68,7 @@ class ArticleController extends Controller
             'content' => $request->content,
             'status' => $request->status ?? 'draft',
             'image' => $imagePath,
-            'slug' => Str::slug($request->title) . '-' . time(),
+            'slug' => Str::slug($request->title),
             'user_id' => auth()->id(),
         ]);
 
@@ -116,7 +125,7 @@ class ArticleController extends Controller
 
         // Hapus gambar lama kalau upload gambar baru
         if ($request->hasFile('image')) {
-            if ($article->image && $article->image !== 'storage/article/default.png') {
+            if ($article->image && $article->image !== 'article/default.png') {
                 $oldPath = str_replace('', '', $article->image);
                 if (Storage::disk('public')->exists($oldPath)) {
                     Storage::disk('public')->delete($oldPath);
@@ -133,7 +142,7 @@ class ArticleController extends Controller
         if ($request->filled('title')) {
             $article->title = $request->title;
             // Generate slug baru dari title baru
-            $article->slug = Str::slug($request->title) . '-' . time();
+            $article->slug = Str::slug($request->title);
         }
         if ($request->filled('content')) {
             $article->content = $request->content;
@@ -159,8 +168,8 @@ class ArticleController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Data not found'], 404);
         }
 
-        if ($article->image && $article->image !== 'storage/article/default.png') {
-            $path = str_replace('storage/', '', $article->image);
+        if ($article->image && $article->image !== 'article/default.png') {
+            $path = str_replace('/', '', $article->image);
             if (Storage::disk('public')->exists($path)) {
                 Storage::disk('public')->delete($path);
             }

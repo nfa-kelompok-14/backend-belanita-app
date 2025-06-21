@@ -30,26 +30,37 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:api');
 
+
 /**
- * Route User Profile (self)
+ * Route user and admin
  */
 Route::middleware('auth:api')->group(function () {
     Route::get('/me', [UserController::class, 'me']);
     Route::put('/user/profile', [UserController::class, 'updateProfile']);
     Route::delete('/user/profile', [UserController::class, 'destroyOwnAccount']);
-});
 
+    Route::apiResource('complaint', ComplaintController::class)->only(['index', 'show']);
+    Route::delete('/complaint/{id}', [ComplaintController::class, 'destroy']);
 
-/**
- * Route user login only
- */
-Route::middleware('auth:api')->group(function () {
-    Route::apiResource('complaint', ComplaintController::class)->only(['index', 'show', 'store']);
-    Route::apiResource('emergency', EmergencyRequestController::class)->only(['store']);
 
     Route::get('/order', [MerchandiseOrderController::class, 'index']);
     Route::get('/order/{id}', [MerchandiseOrderController::class, 'show']);
+
+    Route::get('/emergency', [EmergencyRequestController::class, 'index']);
+    Route::get('/emergency/{id}', [EmergencyRequestController::class, 'show']);
+    Route::delete('/emergency/{id}', [EmergencyRequestController::class, 'destroy']);
+
+});
+
+
+Route::middleware(['auth:api', 'role:user'])->group(function () {
+    Route::post('/complaint', [ComplaintController::class, 'store']);
+
     Route::post('/order', [MerchandiseOrderController::class, 'store']);
+
+    Route::patch('/balance', [UserController::class, 'addBalance']);
+
+    Route::post('/emergency', [EmergencyRequestController::class, 'store']);
 });
 
 /**
@@ -60,11 +71,10 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
     Route::put('/article/{slug}', [ArticleController::class, 'update']);
     Route::delete('/article/{id}', [ArticleController::class, 'destroy']);
 
-    Route::get('/complaint', [ComplaintController::class, 'index']);
-    Route::get('/complaint/{id}', [ComplaintController::class, 'show']);
+
     Route::put('/complaint/{id}', [ComplaintController::class, 'update']);
 
-    Route::apiResource('emergency', EmergencyRequestController::class)->except(['store']);
+    Route::apiResource('emergency', EmergencyRequestController::class)->only(['update', 'destroy']);
     Route::apiResource('users', UserController::class)->only(['index', 'show', 'destroy']);
     Route::apiResource('feedback', FeedbackController::class);
 
@@ -73,10 +83,11 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
     Route::delete('/merchandise/{id}', [MerchandiseController::class, 'destroy']);
 
     Route::post('/category', [MerchandiseCategoryController::class, 'store']);
-    Route::put('/category{id}', [MerchandiseCategoryController::class, 'update']);
-    Route::delete('/category{id}', [MerchandiseCategoryController::class, 'destroy']);
+    Route::put('/category/{id}', [MerchandiseCategoryController::class, 'update']);
+    Route::delete('/category/{id}', [MerchandiseCategoryController::class, 'destroy']);
 
     Route::put('/order/{id}', [MerchandiseOrderController::class, 'update']);
     Route::delete('/order/{id}', [MerchandiseOrderController::class, 'destroy']);
+    Route::put('/emergency', [EmergencyRequestController::class, 'update']);
 
 });

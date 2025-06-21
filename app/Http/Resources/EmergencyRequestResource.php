@@ -17,8 +17,7 @@ class EmergencyRequestResource extends JsonResource
         return [
             'id' => $this->id,
             'contacted_via' => $this->contacted_via,
-            'lat' => $this->lat,
-            'long' => $this->long,
+            'status' => $this->status,
             'notification_status' => $this->notification_status,
             'user' => [
                 'id' => $this->user?->id,

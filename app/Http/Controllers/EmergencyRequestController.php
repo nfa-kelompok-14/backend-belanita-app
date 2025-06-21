@@ -10,30 +10,45 @@ use Illuminate\Validation\Rule;
 
 class EmergencyRequestController extends Controller
 {
-    public function index() {
-        $emergencies = EmergencyRequest::with('user')->get();
+    public function index()
+    {
+        $user = auth('api')->user();
 
-        // Error handling
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Authentication is required. Please login first.'
+            ], 401);
+        }
+
+        $query = EmergencyRequest::with('user');
+
+        if ($user->role === 'user') {
+            $query->where('user_id', $user->id);
+        }
+
+        $query->orderBy('created_at', 'asc');
+
+        $emergencies = $query->get();
+
         if ($emergencies->isEmpty()) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Data not found',
             ], 404);
-        } else {
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Data found',
-                'data' => EmergencyRequestResource::collection($emergencies)
-            ], 200);
         }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Data found',
+            'data' => EmergencyRequestResource::collection($emergencies)
+        ], 200);
     }
 
     public function store(Request $request) {
 
         $validator = Validator::make($request->all(), [
             'contacted_via' => 'required|in:message,call',
-            'lat' => 'required|numeric',
-            'long' => 'required|numeric',
         ]);
 
         if ($validator->fails()) {
@@ -56,9 +71,7 @@ class EmergencyRequestController extends Controller
         $emergency = EmergencyRequest::create([
             'contacted_via' => $request->contacted_via,
             'user_id' => $user->id,
-            'lat' => $request->lat,
-            'long' => $request->long,
-            'notification_status' => 'pending'
+            'notification_status' => 'unread'
         ]);
 
         return response()->json([
@@ -87,59 +100,71 @@ class EmergencyRequestController extends Controller
 
     public function update(Request $request, $id) {
         $emergency = EmergencyRequest::find($id);
-
+    
         if (!$emergency) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Data not found'
             ], 404);
         }
-
+    
         $validator = Validator::make($request->all(), [
-            'status' => ['required', Rule::in(['pending', 'notified', 'resolved'])],
+            'status' => ['nullable', Rule::in(['in_progress', 'completed'])],
+            'notification_status' => ['nullable', Rule::in(['unread', 'read'])],
         ]);
-
+    
         if ($validator->fails()) {
             return response()->json([
                 'status' => 'error',
                 'message' => $validator->errors()
             ], 422);
         }
-
-
-        $data = [
-            'notification_status' => $request->status,
-            'user_id' => $request->user_id ?? $emergency->user_id,
-            'contacted_via' => $emergency->contacted_via, 
-            'lat' => $emergency->lat, 
-            'long' => $emergency->long
-        ];
-
+    
+        $data = [];
+    
+        if ($request->has('status')) {
+            $data['status'] = $request->status;
+        }
+    
+        if ($request->has('notification_status')) {
+            $data['notification_status'] = $request->notification_status;
+        }
+    
         $emergency->update($data);
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Data successfully updated',
-                'data' => new EmergencyRequestResource($emergency)
+    
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Data successfully updated',
+            'data' => new EmergencyRequestResource($emergency)
         ], 200);
     }
+    
 
     public function destroy($id) {
+        $user = auth('api')->user();
         $emergency = EmergencyRequest::find($id);
-
+    
         if (!$emergency) {
-                return response()->json([
+            return response()->json([
                 'status' => 'error',
                 'message' => 'Data not found'
-        ], 404);
-    }
-
+            ], 404);
+        }
+    
+        if ($user->role === 'user' && $user->id !== $emergency->user_id) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You are not authorized to delete this data.'
+            ], 403);
+        }
+    
         $emergency->delete();
-
+    
         return response()->json([
             'status' => 'success',
             'message' => 'Data successfully deleted'
         ], 200);
     }
+    
 
 }

@@ -76,6 +76,7 @@ class MerchandiseCategoryController extends Controller
         ], 404);
     }
 
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:100'
         ]);
