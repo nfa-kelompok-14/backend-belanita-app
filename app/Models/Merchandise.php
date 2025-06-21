@@ -8,9 +8,16 @@ class Merchandise extends Model
 {
     protected $table = 'merchandises';
 
-    protected $fillable = ['name', 'image', 'description', 'price', 'stock', 'merchandise_categories_id'];
-
+    protected $fillable = [
+        'name',
+        'slug',
+        'description',
+        'price',
+        'stock',
+        'image',
+        'merchandise_category_id',
+    ];
     public function merchandiseCategory() {
-        return $this->belongsTo(MerchandiseCategory::class, "merchandise_categories_id");
+        return $this->belongsTo(merchandiseCategory::class, "merchandise_category_id");
     }
 }

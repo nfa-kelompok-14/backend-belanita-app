@@ -19,7 +19,8 @@ class UserSeeder extends Seeder
             'password' => bcrypt('admin123'),
             'role' => 'admin',
             'phone_number' => '0821234567',
-            'address' => 'Jalan Raya Citayam, No.123, Kota Depok'
+            'address' => 'Jalan Raya Citayam, No.123, Kota Depok',
+            'balance' => 0
         ]);
 
         User::create([
@@ -28,24 +29,28 @@ class UserSeeder extends Seeder
             'password' => bcrypt('user123'),
             'role' => 'user',
             'phone_number' => '0123456789',
-            'address' => 'Jalan Boulevard City, No. 100, Kota Casablanca'
+            'address' => 'Jalan Boulevard City, No. 100, Kota Casablanca',
+            'balance' => 2500000,
         ]);
 
         User::create([
             'name' => 'User 2',
-            'email' => 'user2@gmail.com',
+            'email' => 'user2@example.com',
             'password' => bcrypt('user2123'),
             'role' => 'user',
             'phone_number' => '0888123457',
-            'address' => 'Jalan Semanggi, No. 10, Kota Seoul'
+            'address' => 'Jalan Semanggi, No. 10, Kota Seoul',
+            'balance' => 3000000,
         ]);
+        
         User::create([
-            'name' => 'gnarly',
-            'email' => 'gnarly@gmail.com',
-            'password' => bcrypt('gnarly'),
+            'name' => 'Abdul',
+            'email' => 'abdul@gmail.com',
+            'password' => bcrypt('abdul123'),
             'role' => 'admin',
             'phone_number' => '012223344',
-            'address' => 'Kota Palembang'
+            'address' => 'Kota Bogor, Jawa Barat',
+            'balance' => 0
         ]);
     }
 }

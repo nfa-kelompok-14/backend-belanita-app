@@ -20,6 +20,7 @@ return new class extends Migration
             $table->enum('role', ['user', 'admin'])->default('user');
             $table->string('phone_number');
             $table->string('address');
+            $table->integer('balance')->default(0);
             $table->string('image')->default('profile/user_pict_default.png');
             $table->rememberToken();
             $table->timestamps();

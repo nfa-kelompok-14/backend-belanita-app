@@ -19,7 +19,7 @@ return new class extends Migration
             $table->integer('price');
             $table->integer('stock');
             $table->string('slug')->unique();
-            $table->foreignId('merchandise_categories_id')->constrained('merchandise_categories')->onDelete('cascade');
+            $table->foreignId('merchandise_category_id')->constrained('merchandise_categories')->onDelete('cascade');
             $table->timestamps();
         });
     }

@@ -83,19 +83,27 @@ class AuthController extends Controller
     public function logout()
     {
         try {
-            JWTAuth::invalidate(JWTAuth::getToken());
-
+            if (!$token = JWTAuth::getToken()) {
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Token not provided or already removed'
+                ], 200);
+            }
+    
+            JWTAuth::invalidate($token);
+    
             return response()->json([
                 'status' => 'success',
                 'message' => 'Logged out successfully'
             ], 200);
         } catch (JWTException $e) {
             return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to logout, token invalid or expired.'
-            ], 500);
+                'status' => 'success',
+                'message' => 'Token already invalidated or expired'
+            ], 200);
         }
     }
+    
 
     /**
      * Get Me Function

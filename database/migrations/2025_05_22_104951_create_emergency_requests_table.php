@@ -15,9 +15,8 @@ return new class extends Migration
             $table->id();
             $table->enum('contacted_via', ['message', 'call']);
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->decimal('lat', 10, 7);
-            $table->decimal('long', 10, 7);
-            $table->enum('notification_status', ['pending', 'notified', 'resolved'])->default('pending');
+            $table->enum('notification_status', ['unread', 'read'])->default('unread');
+            $table->enum('status', ['in_progress', 'completed'])->default('in_progress');
             $table->timestamps();
         });
     }

@@ -59,6 +59,7 @@ class UserController extends Controller {
             'name' => 'sometimes|string|max:255',
             'phone_number' => 'sometimes|string|max:20',
             'address' => 'sometimes|string|max:255',
+            'balance' => 'sometimes|integer|min:0',
             'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
@@ -69,10 +70,11 @@ class UserController extends Controller {
         $user->name = $request->input('name', $user->name);
         $user->phone_number = $request->input('phone_number', $user->phone_number);
         $user->address = $request->input('address', $user->address);
+        $user->balance = $request->input('balance', $user->balance);
 
         if ($request->hasFile('image')) {
-            if ($user->image && $user->image !== 'storage/profile/user_pict_default.png') {
-                $oldPath = str_replace('storage/', '', $user->image);
+            if ($user->image && $user->image !== 'profile/user_pict_default.png') {
+                $oldPath = str_replace('', '', $user->image);
                 if (Storage::disk('public')->exists($oldPath)) {
                     Storage::disk('public')->delete($oldPath);
                 }
@@ -80,7 +82,7 @@ class UserController extends Controller {
 
             $filename = time() . '_' . $request->file('image')->getClientOriginalName();
             $path = $request->file('image')->storeAs('profile', $filename, 'public');
-            $user->image = 'storage/' . $path;
+            $user->image = '' . $path;
         }
 
         $user->save();
@@ -88,8 +90,9 @@ class UserController extends Controller {
         return response()->json([
             'status' => 'success',
             'message' => 'Profile updated successfully',
-            'data' => $user
+            'data' => new UserResource($user->fresh())
         ]);
+
     }
 
     /**
@@ -133,6 +136,35 @@ class UserController extends Controller {
 
         return response()->json([
             'status' => 'success',
+            'data' => new UserResource($user)
+        ]);
+    }
+
+
+    public function addBalance(Request $request) {
+        $user = auth('api')->user();
+
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'User not authenticated'
+            ], 401);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'amount' => 'required|integer|min:1',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+        $user->balance += $request->amount;
+        $user->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Balance added successfully',
             'data' => new UserResource($user)
         ]);
     }

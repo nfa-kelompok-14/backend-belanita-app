@@ -11,15 +11,27 @@ use Illuminate\Validation\Rule;
 class MerchandiseOrderController extends Controller
 {
     public function index() {
-        $orders = MerchandiseOrder::with('user' ,'merchandise')->get();
 
-        // Error handling
-        if ($orders->isEmpty()) {
+        $user = auth('api')->user();
+
+        if (!$user) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Data not found',
-            ], 404);
+                'message' => 'Authentication is required to view orders. Please login first.'
+            ], 401);
+        }
+
+        if ($user->role == 'admin') {
+            $orders = MerchandiseOrder::with('user' ,'merchandise')->get();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Data found',
+                'data' => $orders
+            ], 200);
         } else {
+            $orders = MerchandiseOrder::with('user', 'merchandise')->where('user_id', $user->id)->get();
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Data found',
@@ -62,6 +74,17 @@ class MerchandiseOrderController extends Controller
             ], 400);
         }
 
+        $balance = $user->balance;
+        $total_price = $merch->price * $request->quantity;
+
+        // Cek balance pengguna
+        if ($balance < $total_price) {
+            return response()->json([
+                'status' => 'error',
+                'message' => "Insufficient balance. Please top up your balance."
+            ], 400);
+        }
+
         // Kalkulasi total harga
         $totalPrice = $merch->price * $request->quantity;
         $merch->stock -= $request->quantity;
@@ -71,10 +94,13 @@ class MerchandiseOrderController extends Controller
             'order_number' => $uniqueCode,
             'quantity' => $request->quantity,
             'total_price' => $totalPrice,
-            'status' => $request->status ?? 'pending',
+            'status' => $request->status ?? 'paid',
             'user_id' => $user->id,
             'merchandise_id' => $request->merchandise_id
         ]);
+
+        $user->balance -= $totalPrice;
+        $user->save();
 
         return response()->json([
             'status' => 'success',
@@ -149,7 +175,7 @@ class MerchandiseOrderController extends Controller
         $data = [
             'quantity' => $request->quantity,
             'total_price' => $totalPrice,
-            'status' => $request->status ?? 'pending',
+            'status' => $request->status ?? 'paid',
             'user_id' => $user->id,
             'merchandise_id' => $request->merchandise_id
         ];

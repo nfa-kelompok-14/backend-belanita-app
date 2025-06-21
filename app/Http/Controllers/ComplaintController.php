@@ -12,7 +12,24 @@ class ComplaintController extends Controller
 {
     public function index()
     {
-        $complaints = Complaint::with(['user', 'feedbacks'])->get();
+        $user = auth('api')->user();
+
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Authentication is required to view complaints. Please login first.'
+            ], 401);
+        }
+
+        $query = Complaint::with(['user', 'feedbacks']);
+
+        if ($user->role === 'user') {
+            $query->where('user_id', $user->id);
+        }
+
+        $query->orderBy('created_at', 'asc');
+
+        $complaints = $query->get();
 
         if ($complaints->isEmpty()) {
             return response()->json([
@@ -111,13 +128,21 @@ class ComplaintController extends Controller
             ], 404);
         }
 
+
+        if ($complaint->status === 'completed') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Cannot update a completed complaint.'
+            ], 400);
+        }
+
         $validator = Validator::make($request->all(), [
             'subject' => 'sometimes|required|string',
             'description' => 'sometimes|required|string',
             'status' => 'sometimes|in:pending,processed,completed',
             'location' => 'sometimes|string|nullable',
             'date' => 'sometimes|date',
-            'phone' => 'required|string',
+            'phone' => 'sometimes|string',
             'image' => 'sometimes|image|mimes:jpg,jpeg,png|max:2048'
         ]);
 
@@ -135,6 +160,22 @@ class ComplaintController extends Controller
                 'message' => 'Authentication is required to update a complaint. Please login first.'
             ], 401);
         }
+
+        // Hapus gambar lama kalau upload gambar baru
+        if ($request->hasFile('image')) {
+            if ($complaint->image && $complaint->image !== null) {
+                $oldPath = str_replace('storage/', '', $complaint->image);
+                if (Storage::disk('public')->exists($oldPath)) {
+                    Storage::disk('public')->delete($oldPath);
+                }
+            }
+
+            $file = $request->file('image');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $path = $file->storeAs('pengaduan', $filename, 'public');
+            $complaint->image = 'storage/' . $path;
+        }
+
 
         if ($request->hasFile('image')) {
             if ($complaint->image) {
