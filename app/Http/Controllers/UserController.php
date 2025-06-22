@@ -54,7 +54,7 @@ class UserController extends Controller {
     public function updateProfile(Request $request)
     {
         $user = auth('api')->user();
-
+    
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|string|max:255',
             'phone_number' => 'sometimes|string|max:20',
@@ -62,15 +62,26 @@ class UserController extends Controller {
             'balance' => 'sometimes|integer|min:0',
             'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
-
+    
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
-
+    
+        // Update basic fields
         $user->name = $request->input('name', $user->name);
         $user->phone_number = $request->input('phone_number', $user->phone_number);
         $user->address = $request->input('address', $user->address);
-        $user->balance = $request->input('balance', $user->balance);
+    
+        // Handle balance top up
+        if ($request->has('balance') && is_numeric($request->input('balance'))) {
+            $nominalTopUp = (int) $request->input('balance');
+            \Log::info('TopUp request', [
+                'current_balance' => $user->balance,
+                'top_up_nominal' => $nominalTopUp,
+                'final_balance' => $user->balance + $nominalTopUp,
+            ]);
+            $user->balance += $nominalTopUp;
+        }
 
         if ($request->hasFile('image')) {
             if ($user->image && $user->image !== 'profile/user_pict_default.png') {
@@ -80,20 +91,21 @@ class UserController extends Controller {
                 }
             }
 
-            $filename = time() . '_' . $request->file('image')->getClientOriginalName();
-            $path = $request->file('image')->storeAs('profile', $filename, 'public');
-            $user->image = '' . $path;
+            $file = $request->file('image');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $path = $file->storeAs('profile', $filename, 'public');
+            $user->image = $path;
         }
-
+    
         $user->save();
-
+    
         return response()->json([
             'status' => 'success',
             'message' => 'Profile updated successfully',
             'data' => new UserResource($user->fresh())
-        ]);
-
+        ], 200);
     }
+    
 
     /**
      * Delete User Function
