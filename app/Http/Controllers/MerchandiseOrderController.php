@@ -184,7 +184,7 @@ class MerchandiseOrderController extends Controller
             $totalPrice = $merch->price * $request->quantity;
         }
     
-        // Update order
+
         $order->update([
             'quantity' => $request->quantity ?? $order->quantity,
             'merchandise_id' => $request->merchandise_id ?? $order->merchandise_id,
